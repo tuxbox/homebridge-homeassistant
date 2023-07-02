@@ -1,13 +1,13 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-
-import { HomeassistantHomebridgePlatform } from './platform';
+import { EventEmitter } from 'stream';
+import { HomeassistantHomebridgePlatform } from '../platform';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class ExamplePlatformAccessory {
+export class LockPlatformAccessory {
   private service: Service;
 
   /**

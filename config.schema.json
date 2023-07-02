@@ -5,6 +5,25 @@
   "schema": {
     "type": "object",
     "properties": {
+      "protocol": {
+        "title": "Protocol",
+        "type": "string",
+        "default": "tcp",
+        "oneOf": [
+          {
+            "title": "TCP",
+            "enum": [
+              "tcp"
+            ]
+          },
+          {
+            "title": "TCPs",
+            "enum": [
+              "tcps"
+            ]
+          }
+        ]
+      },
       "host": {
         "title": "Host",
         "type": "string",
@@ -13,9 +32,16 @@
       },
       "port": {
         "title": "Port",
-        "type": "number",
+        "type": "integer",
         "required": true,
-        "default": 1883
+        "default": 1883,
+        "maximum": 65535
+      },
+      "homeassistantBaseTopic": {
+        "title": "Homeassistant Config Topic",
+        "type": "string",
+        "required": true,
+        "default": "homeassistant"
       },
       "username": {
         "title": "Username",
