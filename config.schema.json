@@ -1,15 +1,31 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "HombridgePluginHomeassistant",
   "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
+      "host": {
+        "title": "Host",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "localhost"
+      },
+      "port": {
+        "title": "Port",
+        "type": "number",
+        "required": true,
+        "default": 1883
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true
+      },
+      "password": {
+        "title": "Password",
+        "type": "password",
+        "required": true
       }
     }
   }
