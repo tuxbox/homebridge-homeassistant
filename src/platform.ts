@@ -1,8 +1,8 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
-import { AsyncMqttClient, MQTT } from 'async-mqtt';
+//import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { AsyncMqttClient } from 'async-mqtt';
+import MQTT from 'async-mqtt';
 
 /**
  * HomebridgePlatform
@@ -15,7 +15,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
-  private client : AsyncMqttClient = null;
+  private client : AsyncMqttClient | null = null;
 
   constructor(
     public readonly log: Logger,
@@ -33,10 +33,10 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       // run the method to discover / register your devices as accessories
       //this.discoverDevices();
       this.client = await MQTT.connectAsync(`${this.config.protocol}://${this.config.host}:${this.config.port}`);
-      this.client.on('message', async (topic, payload) => {
+      this.client?.on('message', async (topic, payload) => {
         this.log.info(`${topic} - ${payload.toString()}`);
       });
-      this.client.subscribe(`${this.config.homeassistantBaseTopic}/#`);
+      this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
     });
   }
 
@@ -72,7 +72,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         exampleDisplayName: 'Kitchen',
       },
     ];
-    
+
 
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of exampleDevices) {
