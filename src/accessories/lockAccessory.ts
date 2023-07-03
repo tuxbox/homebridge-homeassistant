@@ -21,6 +21,7 @@ export class LockPlatformAccessory {
     private readonly accessory: PlatformAccessory,
   ) {
     this.currentState = this.platform.Characteristic.LockCurrentState.UNKNOWN;
+    this.targetState = this.platform.Characteristic.LockTargetState.SECURED;
     this.configuration = accessory.context.configuration as LockConfiguration;
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
@@ -79,7 +80,7 @@ export class LockPlatformAccessory {
   }
 
   async handleHomekitLockTargetStateGet() {
-    return this.platform.Characteristic.LockTargetState.SECURED;
+    return this.targetState;
   }
 
   async handleHomekitLockTargetStateSet(value : CharacteristicValue) {
