@@ -56,8 +56,16 @@ export class LockPlatformAccessory {
     this.platform.log.info(`Handling target state event -> ${payload.payload}`);
     if( payload.payload === this.configuration.payload_lock ) {
       this.targetState = this.platform.Characteristic.LockTargetState.SECURED;
+      this.service.updateCharacteristic(
+        this.platform.Characteristic.LockTargetState,
+        this.platform.Characteristic.LockTargetState.SECURED,
+      );
     } else if( payload.payload === this.configuration.payload_unlock ) {
       this.targetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+      this.service.updateCharacteristic(
+        this.platform.Characteristic.LockTargetState,
+        this.platform.Characteristic.LockTargetState.UNSECURED,
+      );
     } else {
       this.platform.log.warn(`Could not handle target state for lock (${payload})`);
     }
@@ -69,8 +77,16 @@ export class LockPlatformAccessory {
     // TODO extract value based on template
     if( payload.payload === this.configuration.state_locked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.SECURED;
+      this.service.updateCharacteristic(
+        this.platform.Characteristic.LockCurrentState,
+        this.platform.Characteristic.LockCurrentState.SECURED,
+      );
     } else if( payload.payload === this.configuration.state_unlocked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+      this.service.updateCharacteristic(
+        this.platform.Characteristic.LockCurrentState,
+        this.platform.Characteristic.LockCurrentState.UNSECURED,
+      );
     } else {
       this.platform.log.warn(`unknown state payload -> ${JSON.stringify(payload)}`);
       this.platform.log.debug(`state_locked: ${this.configuration.state_locked}`);
