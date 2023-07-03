@@ -64,7 +64,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
               this.log.debug(`Received event message in ${topic}`);
               const accessory = this.accessories.find(
                 (accessory) => accessory.context.configuration.state_topic === topic ||
-                               accessory.context.configruation.command_topic === topic,
+                               accessory.context.configuration.command_topic === topic,
               );
               if( accessory ) {
                 if( topic === accessory?.context.configuration.state_topic ) {
