@@ -67,7 +67,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
                                accessory.context.configruation.command_topic === topic,
               );
               if( accessory ) {
-                if( topic === accessory?.context.configruation.state_topic ) {
+                if( topic === accessory?.context.configuration.state_topic ) {
                   this.log.debug(`publishing event ${accessory.UUID}:set-current-state} for topic ${topic}`);
                   EventEmitter.emit(`${accessory.UUID}:set-current-state`, { payload: payload.toString() } );
                 } else if( topic === accessory.context.configuration.command_topic ) {
