@@ -84,36 +84,11 @@ export class LockPlatformAccessory {
 
   async handleHomekitLockTargetStateSet(value : CharacteristicValue) {
     this.platform.log.debug('handleLockTargetStateSet -> ', value);
-    let payload = this.configuration.payload_lock || "lock";
+    let payload = this.configuration.payload_lock || 'lock';
     if( value === this.platform.Characteristic.LockTargetState.UNSECURED ) {
-      payload = this.configuration.payload_unlock || "unlock";
+      payload = this.configuration.payload_unlock || 'unlock';
     }
     EventEmitter.emit(`${this.accessory.UUID}:set-target-state`, { payload });
-  }
-
-  /**
-   * Handle the "GET" requests from HomeKit
-   * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-   *
-   * GET requests should return as fast as possbile. A long delay here will result in
-   * HomeKit being unresponsive and a bad user experience in general.
-   *
-   * If your device takes time to respond you should update the status of your device
-   * asynchronously instead using the `updateCharacteristic` method instead.
-
-   * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
-   */
-  async getOn() : Promise<CharacteristicValue {
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
-
-    this.platform.log.debug('Get Characteristic On ->', isOn);
-
-    // if you need to return an error to show the device as "Not Responding" in the Home app:
-    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
-
-    return isOn;
   }
 
 }
