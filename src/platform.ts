@@ -7,7 +7,6 @@ import MQTT from 'async-mqtt';
 import { DeviceConfiguration } from './model/device-configuration';
 import { LockConfiguration } from './model/lock-configuration';
 import { LockPlatformAccessory } from './accessories/lockAccessory';
-import { Payload } from './model/mqtt-payload';
 
 /**
  * HomebridgePlatform
