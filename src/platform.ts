@@ -62,6 +62,9 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
+
+  handleDeviceConfiguration(topic: string, configuration : )
+
   /**
    * This is an example method showing how to register discovered accessories.
    * Accessories must only be registered once, previously created accessories
