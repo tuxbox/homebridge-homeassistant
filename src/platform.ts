@@ -105,7 +105,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
 
 
   handleDeviceConfiguration(topic: string, configuration : DeviceConfiguration ) {
-    this.log.info(`Handling device configuration received on topic "${topic}"`);
+    this.log.debug(`Handling device configuration received on topic "${topic}"`);
     const configurationTopic = topic.substring(this.config.homeassistantBaseTopic.length);
     const result = this.topicRegEx.exec(configurationTopic);
     if( result !== null ) {
