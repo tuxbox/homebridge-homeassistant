@@ -37,7 +37,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         log.info(`Connecting to ${this.config.host}`);
         this.client = await MQTT.connectAsync(`${this.config.protocol}://${this.config.host}:${this.config.port}`, {
           username: this.config.username,
-          password: this.config.password
+          password: this.config.password,
         }, true);
         log.info('registering MQTT message handler');
         this.client?.on('message', async (topic, payload) => {
