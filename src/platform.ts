@@ -32,11 +32,19 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       //this.discoverDevices();
-      this.client = await MQTT.connectAsync(`${this.config.protocol}://${this.config.host}:${this.config.port}`);
-      this.client?.on('message', async (topic, payload) => {
-        this.log.info(`${topic} - ${payload.toString()}`);
-      });
-      this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
+      log.info(`Configuration: ${JSON.stringify(this.config)}`);
+      try {
+        log.info(`Connecting to ${this.config.host}`);
+        this.client = await MQTT.connectAsync(`${this.config.protocol}://${this.config.host}:${this.config.port}`);
+        log.info('registering MQTT message handler');
+        this.client?.on('message', async (topic, payload) => {
+          this.log.info(`${topic} - ${payload.toString()}`);
+        });
+        log.info(`subscribing to topic "${this.config.homeassistantBaseTopic}/#"`);
+        this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
+      } catch (e) {
+        log.error(e);
+      }
     });
   }
 
