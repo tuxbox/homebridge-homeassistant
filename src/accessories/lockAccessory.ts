@@ -2,6 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { EventEmitter } from '../event-channel';
 import { HomeassistantHomebridgePlatform } from '../platform';
 import { LockConfiguration } from '../model/lock-configuration';
+import { Payload } from '../model/mqtt-payload';
 
 /**
  * Platform Accessory
@@ -51,23 +52,23 @@ export class LockPlatformAccessory {
     EventEmitter.on(`${this.accessory.UUID}:get-target-state`, this.handleMQTTTargetStateEvent.bind(this));
   }
 
-  async handleMQTTTargetStateEvent(payload : string) {
-    if( payload === this.configuration.payload_lock ) {
+  async handleMQTTTargetStateEvent(payload : Payload) {
+    if( payload.payload === this.configuration.payload_lock ) {
       this.targetState = this.platform.Characteristic.LockTargetState.SECURED;
-    } else if( payload === this.configuration.payload_unlock ) {
+    } else if( payload.payload === this.configuration.payload_unlock ) {
       this.targetState = this.platform.Characteristic.LockTargetState.UNSECURED;
     } else {
       this.platform.log.warn(`Could not handle target state for lock (${payload})`);
     }
   }
 
-  async handleMQTTCurrentStateEvent(payload : string) {
+  async handleMQTTCurrentStateEvent(payload : Payload) {
     this.platform.log.debug('Handling MQTT current state event');
     this.platform.log.debug(`received payload ${payload}`);
     // TODO extract value based on template
-    if( payload === this.configuration.state_locked ) {
+    if( payload.payload === this.configuration.state_locked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.SECURED;
-    } else if( payload === this.configuration.state_unlocked ) {
+    } else if( payload.payload === this.configuration.state_unlocked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
     } else {
       this.platform.log.warn(`unknown state payload -> ${payload}`);
