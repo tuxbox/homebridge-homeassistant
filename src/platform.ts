@@ -7,6 +7,7 @@ import MQTT from 'async-mqtt';
 import { DeviceConfiguration } from './model/device-configuration';
 import { LockConfiguration } from './model/lock-configuration';
 import { LockPlatformAccessory } from './accessories/lockAccessory';
+import { Payload } from './model/mqtt-payload';
 
 /**
  * HomebridgePlatform
@@ -139,7 +140,17 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         this.client?.subscribe(usedAccessory.context.configuration.command_topic);
         EventEmitter.on(`${usedAccessory.UUID}:set-target-state`, async (payload) => {
           this.log.debug(`Publish payload (${payload}) to topic ${usedAccessory.context.configuration.command_topic}`);
-          this.client?.publish(usedAccessory.context.configuration.command_topic, payload);
+          let actualPayload = '';
+          if( payload !== null && payload.payload !== null ) {
+            if( typeof payload.payload === 'string' ) {
+              this.log.debug('received payload is of type string - just passing it on');
+              actualPayload = payload.payload;
+            } else {
+              this.log.debug('received payload is not of type string - JSON.stringify applied');
+              actualPayload = JSON.stringify(payload.payload);
+            }
+          }
+          this.client?.publish(usedAccessory.context.configuration.command_topic, actualPayload);
         });
       } else {
         this.log.warn(`Unhandled device type ${deviceType}`);
