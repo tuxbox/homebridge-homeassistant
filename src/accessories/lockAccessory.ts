@@ -71,7 +71,7 @@ export class LockPlatformAccessory {
     } else if( payload.payload === this.configuration.state_unlocked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
     } else {
-      this.platform.log.warn(`unknown state payload -> ${payload}`);
+      this.platform.log.warn(`unknown state payload -> ${JSON.stringify(payload)}`);
       this.currentState = this.platform.Characteristic.LockCurrentState.UNKNOWN;
     }
   }
