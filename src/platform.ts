@@ -1,8 +1,12 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-//import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { EventEmitter } from './event-channel';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { AsyncMqttClient } from 'async-mqtt';
 import MQTT from 'async-mqtt';
+import { DeviceConfiguration } from './model/device-configuration';
+import { LockConfiguration } from './model/lock-configuration';
+import { LockPlatformAccessory } from './accessories/lockAccessory';
 
 /**
  * HomebridgePlatform
@@ -12,6 +16,7 @@ import MQTT from 'async-mqtt';
 export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  private readonly topicRegEx = new RegExp('^/([^/]+)/([^/]+)(?:/([^/]+))?/config$');
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
@@ -39,9 +44,45 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
           username: this.config.username,
           password: this.config.password,
         }, true);
+        log.info(`connected to ${this.config.protocol}://${this.config.username}@${this.config.host}:${this.config.port}`);
         log.info('registering MQTT message handler');
         this.client?.on('message', async (topic, payload) => {
-          this.log.info(`${topic} - ${payload.toString()}`);
+          if( topic !== null ) {
+            if( topic.startsWith(this.config.homeassistantBaseTopic) ) {
+              this.log.info(`Received configuration on topic '${topic}'`);
+              if( payload !== null ) {
+                try {
+                  const jsonPayload = JSON.parse(payload.toString());
+                  this.handleDeviceConfiguration(topic, jsonPayload as DeviceConfiguration);
+                } catch (e: unknown) {
+                  this.log.error(`error handling payload on topic ${topic} - ${JSON.stringify(e)}`);
+                }
+              } else {
+                this.log.warn('payload was empty');
+              }
+            } else {
+              this.log.debug(`Received event message in ${topic}`);
+              const accessory = this.accessories.find(
+                (accessory) => accessory.context.configuration.state_topic === topic ||
+                               accessory.context.configruation.command_topic === topic,
+              );
+              if( accessory ) {
+                if( topic === accessory?.context.configruation.state_topic ) {
+                  this.log.debug(`publishing event ${accessory.UUID}:set-current-state} for topic ${topic}`);
+                  EventEmitter.emit(`${accessory.UUID}:set-current-state`, { payload: payload.toString() } );
+                } else if( topic === accessory.context.configuration.command_topic ) {
+                  this.log.debug(`publishing event ${accessory.UUID}:set-current-state} for topic ${topic}`);
+                  EventEmitter.emit(`${accessory.UUID}:get-target-state`, { payload: payload.toString() } );
+                } else {
+                  this.log.warn(`have not found an accessory for topic ${topic}`);
+                }
+              } else {
+                this.log.warn(`have not found an accessory for topic ${topic}`);
+              }
+            }
+          } else {
+            this.log.warn('Received a message but topic was not set');
+          }
         });
         log.info(`subscribing to topic "${this.config.homeassistantBaseTopic}/#"`);
         this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
@@ -63,7 +104,50 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
 
-  handleDeviceConfiguration(topic: string, configuration : )
+  handleDeviceConfiguration(topic: string, configuration : DeviceConfiguration ) {
+    this.log.info(`Handling device configuration received on topic "${topic}"`);
+    const configurationTopic = topic.substring(this.config.homeassistantBaseTopic.length);
+    const result = this.topicRegEx.exec(configurationTopic);
+    if( result !== null ) {
+      const deviceType = result[1];
+      const uuid = this.api.hap.uuid.generate(configuration.unique_id);
+      const existingAccessory = this.accessories.find((accessory) => accessory.UUID === uuid);
+      if( deviceType === 'lock' ) {
+        const lockConfiguration = configuration as LockConfiguration;
+        let usedAccessory : PlatformAccessory;
+        if( existingAccessory ) {
+          this.log.info(`Found an accessory with UUID ${uuid}`);
+          new LockPlatformAccessory(this, existingAccessory);
+          usedAccessory = existingAccessory;
+        } else {
+          this.log.info(`No accessory found with UUID ${uuid}`);
+          this.log.info('Creating a new lock accessory');
+          const accessory = new this.api.platformAccessory(lockConfiguration.name, uuid);
+          // store a copy of the device object in the `accessory.context`
+          // the `context` property can be used to store any data about the accessory you may need
+          accessory.context.device_type = 'lock';
+          accessory.context.configuration = lockConfiguration;
+          // create the accessory handler for the newly create accessory
+          // this is imported from `platformAccessory.ts`
+          new LockPlatformAccessory(this, accessory);
+
+          // link the accessory to your platform
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          usedAccessory = accessory;
+        }
+        this.client?.subscribe(usedAccessory.context.configuration.state_topic);
+        this.client?.subscribe(usedAccessory.context.configuration.command_topic);
+        EventEmitter.on(`${usedAccessory.UUID}:set-target-state`, async (payload) => {
+          this.log.debug(`Publish payload (${payload}) to topic ${usedAccessory.context.configuration.command_topic}`);
+          this.client?.publish(usedAccessory.context.configuration.command_topic, payload);
+        });
+      } else {
+        this.log.warn(`Unhandled device type ${deviceType}`);
+      }
+    } else {
+      this.log.error(`Failed to extract configuration details from topic "${topic}"`);
+    }
+  }
 
   /**
    * This is an example method showing how to register discovered accessories.
