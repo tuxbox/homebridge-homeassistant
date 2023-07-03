@@ -1,9 +1,8 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-import { EventEmitter } from '../event-channel';
-import { HomeassistantHomebridgePlatform } from '../platform';
-import { LockConfiguration } from '../model/lock-configuration';
-import { Payload } from '../model/mqtt-payload';
-import { DeviceConfiguration } from '../model/device-configuration';
+import { EventEmitter } from '../../event-channel';
+import { HomeassistantHomebridgePlatform } from '../../platform';
+import { Payload } from '../../model/mqtt-payload';
+import { DeviceConfiguration } from '../../model/device-configuration';
 
 /**
  * Platform Accessory
