@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { HomeassistantHomebridgePlatform } from './platform';
+import { HomeassistantHomebridgePlatform } from '../platform';
 
 /**
  * Platform Accessory
