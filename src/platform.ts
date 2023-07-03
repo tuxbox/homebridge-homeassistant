@@ -42,8 +42,8 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         });
         log.info(`subscribing to topic "${this.config.homeassistantBaseTopic}/#"`);
         this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
-      } catch (e) {
-        log.error(e);
+      } catch (e : unknown) {
+        log.error(JSON.stringify(e));
       }
     });
   }
