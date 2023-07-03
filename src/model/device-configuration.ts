@@ -5,5 +5,5 @@ export type DeviceConfiguration = {
   state_topic: string;
   value_template: string;
   name: string;
-  device: DeviceDetails;
+  device: DeviceDetails | null;
 };
