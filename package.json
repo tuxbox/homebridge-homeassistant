@@ -7,10 +7,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/home-assistant/homebridge-homeassistant.git"
+    "url": "https://github.com/tuxbox/homebridge-homeassistant.git"
   },
   "bugs": {
-    "url": "https://github.com/home-assistant/homebridge-homeassistant/issues"
+    "url": "https://github.com/tuxbox/homebridge-homeassistant/issues"
   },
   "engines": {
     "node": ">=14.18.1",
