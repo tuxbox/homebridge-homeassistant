@@ -46,7 +46,7 @@ export class LockPlatformAccessory {
       .onGet(this.handleHomekitLockCurrentStateGet.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.LockTargetState)
-      .onGet(this.handleHomekitLockTargetStateGet.bind(this))
+      //.onGet(this.handleHomekitLockTargetStateGet.bind(this))
       .onSet(this.handleHomekitLockTargetStateSet.bind(this));
     EventEmitter.on(`${this.accessory.UUID}:set-current-state`, this.handleMQTTCurrentStateEvent.bind(this));
     EventEmitter.on(`${this.accessory.UUID}:get-target-state`, this.handleMQTTTargetStateEvent.bind(this));
