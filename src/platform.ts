@@ -7,6 +7,8 @@ import MQTT from 'async-mqtt';
 import { DeviceConfiguration } from './model/device-configuration';
 import { LockConfiguration } from './model/lock-configuration';
 import { LockPlatformAccessory } from './accessories/lockAccessory';
+import { TemperatureSensorPlatformAccessory } from './accessories/sensors/temperatureSensorAccessory';
+import { HumiditySensorPlatformAccessory } from './accessories/sensors/humiditySensorAccessory';
 
 /**
  * HomebridgePlatform
@@ -115,6 +117,18 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       const existingAccessory = this.accessories.find((accessory) => accessory.UUID === uuid);
       if( deviceType === 'lock' ) {
         this.handleLockConfiguration(uuid, existingAccessory, configuration);
+      } else if( deviceType === 'sensor' ) {
+        if( configuration.device_class ) {
+          if( configuration.device_class === 'temperature' ) {
+            this.handleTemperatureSensorConfiguration(uuid, existingAccessory, configuration);
+          } else if( configuration.device_class === 'humidity') {
+            this.handleHumiditySensorConfiguration(uuid, existingAccessory, configuration);
+          } else {
+            this.log.warn(`found a currently unsupported device_class '${configuration.device_class}' - ignoring sensor`);
+          }
+        } else {
+          this.log.warn(`Found a sensor without a device_class specified - It will be ignored (${topic})`);
+        }
       } else {
         this.log.warn(`Unhandled device type ${deviceType}`);
       }
@@ -162,6 +176,58 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       }
       this.client?.publish(usedAccessory.context.configuration.command_topic, actualPayload);
     });
+  }
+
+  handleTemperatureSensorConfiguration(uuid: string, existingAccessory: PlatformAccessory | undefined, configuration: DeviceConfiguration) {
+    let usedAccessory : PlatformAccessory;
+    if( existingAccessory ) {
+      this.log.info(`Found an accessory with UUID ${uuid}`);
+      new TemperatureSensorPlatformAccessory(this, existingAccessory);
+      usedAccessory = existingAccessory;
+    } else {
+      this.log.info(`No accessory found with UUID ${uuid}`);
+      this.log.info('Creating a new temperature sensor accessory');
+      const accessory = new this.api.platformAccessory(configuration.name, uuid);
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device_type = 'sensor';
+      accessory.context.device_class = 'temperature';
+      accessory.context.configuration = configuration;
+      // create the accessory handler for the newly create accessory
+      // this is imported from `platformAccessory.ts`
+      new TemperatureSensorPlatformAccessory(this, accessory);
+
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      usedAccessory = accessory;
+    }
+    this.client?.subscribe(usedAccessory.context.configuration.state_topic);
+  }
+
+  handleHumiditySensorConfiguration(uuid: string, existingAccessory: PlatformAccessory | undefined, configuration: DeviceConfiguration) {
+    let usedAccessory : PlatformAccessory;
+    if( existingAccessory ) {
+      this.log.info(`Found an accessory with UUID ${uuid}`);
+      new HumiditySensorPlatformAccessory(this, existingAccessory);
+      usedAccessory = existingAccessory;
+    } else {
+      this.log.info(`No accessory found with UUID ${uuid}`);
+      this.log.info('Creating a new humidity sensor accessory');
+      const accessory = new this.api.platformAccessory(configuration.name, uuid);
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device_type = 'sensor';
+      accessory.context.device_class = 'humidity';
+      accessory.context.configuration = configuration;
+      // create the accessory handler for the newly create accessory
+      // this is imported from `platformAccessory.ts`
+      new TemperatureSensorPlatformAccessory(this, accessory);
+
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      usedAccessory = accessory;
+    }
+    this.client?.subscribe(usedAccessory.context.configuration.state_topic);
   }
 
 }
