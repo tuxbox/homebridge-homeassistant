@@ -1,7 +1,5 @@
-import { PlatformAccessory } from 'homebridge';
-import { EventEmitter } from '../../event-channel';
+import { PlatformAccessory, Service } from 'homebridge';
 import { HomeassistantHomebridgePlatform } from '../../platform';
-import { Payload } from '../../model/mqtt-payload';
 import { BaseSensorPlatformAccessory } from './baseSensorAccessory';
 
 /**
@@ -17,9 +15,11 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
   ) {
     super(platform, accessory);
     this.currentState = 0.0;
+  }
 
-    this.service = this.accessory.getService(this.platform.Service.TemperatureSensor) ||
-                   this.accessory.addService(this.platform.Service.TemperatureSensor);
+  override createService() : Service {
+    return this.accessory.getService(this.platform.Service.TemperatureSensor) ||
+            this.accessory.addService(this.platform.Service.TemperatureSensor);
   }
 
   override configureSensor() {
@@ -28,19 +28,14 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.configuration.name);
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(this.handleHomekitCurrentStateGet.bind(this));
+  }
 
-    EventEmitter.on(`${this.accessory.UUID}:set-current-temperature`, this.handleMQTTCurrentTemperatureEvent.bind(this));
+  override updateCharacteristic(value: number) {
+    this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, value);
   }
 
   protected override initialValue(): number {
-      return 0.0;
-  }
-
-  async handleMQTTCurrentTemperatureEvent(payload : Payload) {
-    this.platform.log.info('Handling MQTT current temperature event');
-    this.platform.log.info(`received payload ${payload.payload}`);
-    // TODO extract value based on template
-    // TODO
+    return 0.0;
   }
 
 }
