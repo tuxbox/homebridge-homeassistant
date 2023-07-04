@@ -61,7 +61,8 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
                 this.log.warn('payload was empty');
               }
             } else {
-              this.log.debug(`Received event message in ${topic}`);
+              this.log.info(`Received event message in ${topic}`);
+              this.log.info(`Payload: ${payload.toString()}`);
               const accessory = this.accessories.find(
                 (accessory) => accessory.context.configuration.state_topic === topic ||
                                accessory.context.configuration.command_topic === topic,

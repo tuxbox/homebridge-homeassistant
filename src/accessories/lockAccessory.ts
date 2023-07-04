@@ -73,7 +73,7 @@ export class LockPlatformAccessory {
 
   async handleMQTTCurrentStateEvent(payload : Payload) {
     this.platform.log.info('Handling MQTT current state event');
-    this.platform.log.info(`received payload ${payload}`);
+    this.platform.log.info(`received payload ${payload.payload}`);
     // TODO extract value based on template
     if( payload.payload === this.configuration.state_locked ) {
       this.currentState = this.platform.Characteristic.LockCurrentState.SECURED;
