@@ -221,7 +221,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       accessory.context.configuration = configuration;
       // create the accessory handler for the newly create accessory
       // this is imported from `platformAccessory.ts`
-      new TemperatureSensorPlatformAccessory(this, accessory);
+      new HumiditySensorPlatformAccessory(this, accessory);
 
       // link the accessory to your platform
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
