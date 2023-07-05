@@ -40,11 +40,12 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.configuration.name);
     this.configureSensor();
 
-    EventEmitter.on(`${accessory.UUID}:${Events.SetCurrentState}`, (payload : Payload) => {
+    EventEmitter.on(`${Events.MqttMessageReceived}:${accessory.context.configuration.state_topic}`, ((payload : Payload) => {
+      this.log.debug(`Handling MQTT state update for accessory ${this.accessory.displayName}`);
       const value = this.renderValue(payload);
       this.currentState = value;
       this.updateCharacteristic(value);
-    });
+    }).bind(this));
 
   }
 

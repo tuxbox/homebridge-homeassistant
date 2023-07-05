@@ -29,6 +29,8 @@ export class SensorConfigurator implements Configurator<DeviceConfiguration> {
     accessory.context.device_type = 'sensor';
     accessory.context.device_class = accessory.context.configuration.device_class;
     this.configureAccessory(accessory);
+    /*
+    TODO test remove
     EventEmitter.on(`${accessory.UUID}:${Events.SetTargetState}`, async (payload) => {
       this.log.debug(`Publish payload (${payload}) to topic ${accessory.context.configuration.command_topic}`);
       let actualPayload = '';
@@ -47,6 +49,7 @@ export class SensorConfigurator implements Configurator<DeviceConfiguration> {
         opts: null,
       });
     });
+    */
   }
 
 }

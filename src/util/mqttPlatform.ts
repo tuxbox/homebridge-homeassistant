@@ -54,7 +54,7 @@ export class MQTTPlatform {
         } else {
           this.log.info(`Received event message in ${topic}`);
           this.log.debug(`Payload: ${payload.toString()}`);
-          EventEmitter.emit(Events.MqttMessageReceived, {
+          EventEmitter.emit(`${Events.MqttMessageReceived}:${topic}`, {
             topic,
             payload: payload.toString(),
           });

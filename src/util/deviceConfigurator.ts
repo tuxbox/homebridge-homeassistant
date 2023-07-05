@@ -7,6 +7,7 @@ import { AccessoryConfigurationEvent } from '../model/events/accessoryConfigurat
 import { HomeassistantHomebridgePlatform } from '../platform';
 import { Configurator } from './deviceConfigurator/configurator';
 import { subscribeTopic } from './mqttHelpers';
+import { SwitchConfigurator } from './deviceConfigurator/switchConfigurator';
 
 export class DeviceConfigurator {
 
@@ -17,8 +18,9 @@ export class DeviceConfigurator {
 
   constructor(private readonly api : API, private readonly platform : HomeassistantHomebridgePlatform) {
     this.configurators.set('lock', new LockConfigurator(api, platform))
-//                    .set('sensor', new SensorConfigurator(api, platform))
-                    ;
+    //  .set('sensor', new SensorConfigurator(api, platform))
+      .set('switch', new SwitchConfigurator(api, platform))
+    ;
     this.log = this.platform.log;
   }
 

@@ -6,7 +6,7 @@ export const Events= {
   'MqttSubscribe': 'mqtt:subscribe',
   'MqttPublish': 'mqtt:publish',
   'MqttMessageReceived': 'mqtt:message:received',
-  'SetCurrentState': 'set-current-state',
-  'GetTargetState': 'get-target-state',
-  'SetTargetState': 'set-target-state',
+  // TODO remove 'SetCurrentState': 'set-current-state',
+  // TODO remove 'GetTargetState': 'get-target-state',
+  // TODO remove test 'SetTargetState': 'set-target-state',
 };

@@ -72,7 +72,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
     this.service.getCharacteristic(this.platform.Characteristic.LockTargetState)
       .onGet(this.handleHomekitLockTargetStateGet.bind(this))
       .onSet(this.handleHomekitTargetStateSet.bind(this));
-    EventEmitter.on(`${this.accessory.UUID}:${Events.GetTargetState}`, this.handleMQTTTargetStateEvent.bind(this));
+    // TODO test remove EventEmitter.on(`${this.accessory.UUID}:${Events.GetTargetState}`, this.handleMQTTTargetStateEvent.bind(this));
   }
 
   override updateCharacteristic(value: string) {
