@@ -82,7 +82,7 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     } catch (e) {
       this.log.error(`error rendering template - ${e}`);
     }
-    return null as StateType;
+    return null as unknown as StateType;
   }
 
   async handleHomekitCurrentStateGet() : Promise<StateType> {
