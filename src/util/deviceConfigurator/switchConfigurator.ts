@@ -13,8 +13,8 @@ export class SwitchConfigurator implements Configurator<SwitchConfiguration> {
   }
 
   configure(accessory: PlatformAccessory) {
-    this.log.info(`configure a lock with name ${accessory.displayName}`);
-    accessory.context.device_type = 'lock';
+    this.log.info(`configure a switch with name ${accessory.displayName}`);
+    accessory.context.device_type = 'switch';
     new SwitchPlatformAccessory(this.platform, accessory);
   }
 

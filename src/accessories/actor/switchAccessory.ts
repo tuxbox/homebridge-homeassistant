@@ -2,17 +2,18 @@ import { CharacteristicValue, Service } from 'homebridge';
 import { BaseActorPlatformAccessory } from './baseActorAccessory';
 import { SwitchConfiguration } from '../../model/configuration/switch-confiugration';
 
-export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<string, CharacteristicValue, SwitchConfiguration> {
+export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<boolean, CharacteristicValue, SwitchConfiguration> {
 
-  protected override initialValue(): string {
-    return 'off';
+  protected override initialValue(): boolean {
+    return false;
   }
 
-  protected mapActorTypeToPayload(value: CharacteristicValue): string {
+  protected mapActorTypeToPayload(value: boolean): string {
     let result = this.configuration.payload_off || 'off';
     if( value === true ) {
       result = this.configuration.payload_on || 'on';
     }
+    this.log.debug(`mapBooleanToPayload ${value} -> ${result}`);
     return result;
   }
 
@@ -27,7 +28,8 @@ export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<string, 
       .onSet(this.handleHomekitTargetStateSet.bind(this));
   }
 
-  protected updateCharacteristic(value: string) {
+  protected updateCharacteristic(value: CharacteristicValue) {
+    this.log.debug(`Updating switch value to -> ${value}`);
     const stateOff = this.configuration.payload_off || this.configuration.state_off || 'off';
     const stateOn = this.configuration.payload_on || this.configuration.state_on || 'on';
     if( value === stateOff ) {

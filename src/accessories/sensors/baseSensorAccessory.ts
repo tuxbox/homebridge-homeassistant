@@ -57,7 +57,7 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
 
   protected abstract updateCharacteristic(value: StateType);
 
-  protected payloadToTemplateValue(payload: Payload, isJSON = true) : TemplatePayload {
+  protected payloadToTemplateValue(payload: Payload) : TemplatePayload {
     const result : TemplatePayload = {
       value: '',
       value_json: null,
@@ -65,12 +65,10 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     if( payload ) {
       if( payload.payload ) {
         result.value = payload.payload;
-        if( isJSON ) {
-          try {
-            result.value_json = JSON.parse(payload.payload);
-          } catch (e) {
-            this.platform.log.warn(`Error parsing payload although defined as JSON payload (${payload.payload})`);
-          }
+        try {
+          result.value_json = JSON.parse(payload.payload);
+        } catch (e) {
+          this.platform.log.warn(`Error parsing payload although defined as JSON payload (${payload.payload})`);
         }
       }
     }

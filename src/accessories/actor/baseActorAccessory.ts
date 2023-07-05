@@ -1,5 +1,4 @@
-import { Logger, PlatformAccessory } from 'homebridge';
-import { DeviceConfiguration } from '../../model/configuration/device-configuration';
+import { PlatformAccessory } from 'homebridge';
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { BaseSensorPlatformAccessory } from '../sensors/baseSensorAccessory';
 import { publishMessage } from '../../util/mqttHelpers';
