@@ -5,7 +5,7 @@ import { EventEmitter, Events } from './eventChannel';
 
 export class MQTTPlatform {
 
-  private readonly topicRegEx = new RegExp('^/([^/]+)/([^/]+)(?:/([^/]+))?/config$');
+  private readonly topicRegEx = new RegExp('^([^/]+)/([^/]+)/(?:([^/]+)/)?config$');
   private client : AsyncMqttClient | null = null;
 
 
@@ -27,7 +27,7 @@ export class MQTTPlatform {
     this.client?.on('message', async (topic, payload) => {
       if( topic !== null ) {
         if( topic.startsWith(this.configuration.homeassistantBaseTopic) ) {
-          const result = this.topicRegEx.exec(topic);
+          const result = this.topicRegEx.exec(topic.substring(this.configuration.homeassistantBaseTopic.length+1));
           this.log.info(`RESULT: ${result}`);
           if( result ) {
             const deviceType = result[1];

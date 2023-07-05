@@ -2,11 +2,8 @@ import { API, Logger, PlatformAccessory } from 'homebridge';
 import { EventEmitter, Events } from './eventChannel';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../settings';
 import { LockConfigurator } from './deviceConfigurator/lockConfigurator';
-import { SensorConfigurator } from './deviceConfigurator/sensorConfigurator';
-import { LockConfiguration } from '../model/configuration/lock-configuration';
 import { DeviceConfiguration } from '../model/configuration/device-configuration';
 import { AccessoryConfigurationEvent } from '../model/events/accessoryConfigurationEvent';
-import { platform } from 'os';
 import { HomeassistantHomebridgePlatform } from '../platform';
 import { Configurator } from './deviceConfigurator/configurator';
 
