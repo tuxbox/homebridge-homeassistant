@@ -1,5 +1,5 @@
 const nunjucks = require('nunjucks');
 
-const template = nunjucks.compile('{{ value_json }}');
+const template = nunjucks.compile('{{ value_json.POWER }}');
 
-console.log(template.render({ value: 'xkcd', value_json: JSON.parse('"x"') }));
+console.log(template.render({"value":"{\"POWER\":\"ON\"}","value_json":{"POWER":"ON"}}));
