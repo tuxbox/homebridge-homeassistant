@@ -28,6 +28,7 @@ export class MQTTPlatform {
       if( topic !== null ) {
         if( topic.startsWith(this.configuration.homeassistantBaseTopic) ) {
           const result = this.topicRegEx.exec(topic);
+          this.log.info(`RESULT: ${result}`);
           if( result ) {
             const deviceType = result[1];
             this.log.info(`Received configuration on topic '${topic}'`);
@@ -47,7 +48,7 @@ export class MQTTPlatform {
               this.log.warn('payload was empty');
             }
           } else {
-            this.log.info(`configuration message received on topic ${topic}`);
+            this.log.debug(`(unhandled configuration message received on topic ${topic}`);
           }
         } else {
           this.log.info(`Received event message in ${topic}`);
