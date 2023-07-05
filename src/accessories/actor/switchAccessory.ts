@@ -28,9 +28,11 @@ export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<string, 
   }
 
   protected updateCharacteristic(value: string) {
-    if( value === this.configuration.state_off ) {
+    const stateOff = this.configuration.payload_off || this.configuration.state_off || 'off';
+    const stateOn = this.configuration.payload_on || this.configuration.state_on || 'on';
+    if( value === stateOff ) {
       this.service.updateCharacteristic(this.platform.Characteristic.On, false);
-    } else if( value === this.configuration.state_on ) {
+    } else if( value === stateOn ) {
       this.service.updateCharacteristic(this.platform.Characteristic.On, true);
     } else {
       this.platform.log.warn('unknown state value');
