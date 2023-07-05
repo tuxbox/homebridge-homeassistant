@@ -12,6 +12,8 @@ import nunjucks from 'nunjucks';
  * Each accessory may expose multiple services of different service types.
  */
 export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceConfiguration> {
+
+  protected readonly log : Logger;
   protected service: Service;
   protected readonly configuration: T;
 
@@ -23,6 +25,7 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     protected readonly platform: HomeassistantHomebridgePlatform,
     protected readonly accessory: PlatformAccessory,
   ) {
+    this.log = platform.log;
     this.configuration = accessory.context.configuration;
     this.currentState = this.initialValue();
     this.template = nunjucks.compile(this.configuration.value_template || '{{ value }}');

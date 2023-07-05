@@ -35,6 +35,8 @@ export class DeviceConfigurator {
           usedAccessory = new this.api.platformAccessory(configuration.name, uuid);
           usedAccessory.context.configuration = configuration;
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
+        } else {
+          this.log.info('configuring existing accessory');
         }
         configurator.configure(usedAccessory);
       } else {
@@ -61,7 +63,7 @@ export class DeviceConfigurator {
 
   configureAccessory(accessory: PlatformAccessory) {
     if( accessory.context.configuration.state_topic ) {
-      EventEmitter.emit(Events.MqttSubscribe, accessory.context.configurationTopic.state_topic);
+      EventEmitter.emit(Events.MqttSubscribe, accessory.context.configuration.state_topic);
     }
     if( accessory.context.configuration.command_topic ) {
       EventEmitter.emit(Events.MqttSubscribe, accessory.context.configuration.command_topic);

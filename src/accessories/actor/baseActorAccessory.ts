@@ -1,4 +1,4 @@
-import { PlatformAccessory } from 'homebridge';
+import { Logger, PlatformAccessory } from 'homebridge';
 import { DeviceConfiguration } from '../../model/configuration/device-configuration';
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { BaseSensorPlatformAccessory } from '../sensors/baseSensorAccessory';
@@ -17,7 +17,7 @@ export abstract class BaseActorPlatformAccessory<StateType, ActorType, T extends
   protected abstract mapActorTypeToPayload(value : ActorType) : unknown;
 
   async handleHomekitTargetStateSet(value : ActorType) {
-    this.platform.log.debug('handleTargetStateSet -> ', value);
+    this.log.debug('handleTargetStateSet -> ', value);
     const payload = this.mapActorTypeToPayload(value);
     EventEmitter.emit(Events.MqttPublish, { payload });
   }

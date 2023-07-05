@@ -24,7 +24,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
   }
 
   async handleMQTTTargetStateEvent(payload : Payload) {
-    this.platform.log.info(`Handling target state event -> ${payload.payload}`);
+    this.log.debug(`Handling target state event -> ${payload.payload}`);
     if( payload.payload === this.configuration.payload_lock ) {
       this.targetState = this.platform.Characteristic.LockTargetState.SECURED;
       this.service.updateCharacteristic(
@@ -111,6 +111,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
     if( value === this.platform.Characteristic.LockTargetState.UNSECURED ) {
       payload = this.configuration.payload_unlock || 'unlock';
     }
+    this.log.debug(`Mapped ${value} -> ${payload}`);
     return payload;
   }
 

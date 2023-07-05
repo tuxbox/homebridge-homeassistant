@@ -28,7 +28,6 @@ export class MQTTPlatform {
       if( topic !== null ) {
         if( topic.startsWith(this.configuration.homeassistantBaseTopic) ) {
           const result = this.topicRegEx.exec(topic.substring(this.configuration.homeassistantBaseTopic.length+1));
-          this.log.info(`RESULT: ${result}`);
           if( result ) {
             const deviceType = result[1];
             this.log.info(`Received configuration on topic '${topic}'`);
@@ -83,18 +82,23 @@ export class MQTTPlatform {
       }
     });
     EventEmitter.on(Events.MqttSubscribe, (async (topic : string) => {
+      this.log.debug('Received MqttSubscribe Event');
       await this.subscribe(topic);
     }).bind(this));
     EventEmitter.on(Events.MqttPublish, (async ( topic : string, payload : string ) => {
+      this.log.debug('Received MqttPublish Event');
       await this.publish(topic, payload);
     }).bind(this));
   }
 
   async subscribe(topic : string) {
+    this.log.debug(`Subscribing to topic ${topic}`);
     this.client?.subscribe(topic);
   }
 
   async publish(topic: string, payload: string) {
+    this.log.debug(`Publish data to topic ${topic}`);
+    this.log.debug(`payload: ${payload?.toString()}`);
     this.client?.publish(topic, payload);
   }
 

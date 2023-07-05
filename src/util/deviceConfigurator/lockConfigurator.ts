@@ -3,6 +3,7 @@ import { LockConfiguration } from '../../model/configuration/lock-configuration'
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { Configurator } from './configurator';
 import { EventEmitter, Events } from '../eventChannel';
+import { LockPlatformAccessory } from '../../accessories/actor/lockAccessory';
 
 export class LockConfigurator implements Configurator<LockConfiguration> {
 
@@ -13,9 +14,11 @@ export class LockConfigurator implements Configurator<LockConfiguration> {
   }
 
   configure(accessory: PlatformAccessory) {
+    this.log.info(`configure a lock with name ${accessory.displayName}`);
     accessory.context.device_type = 'lock';
+    new LockPlatformAccessory(this.platform, accessory);
     EventEmitter.on(`${accessory.UUID}:${Events.SetTargetState}`, async (payload) => {
-      this.log.debug(`Publish payload (${payload}) to topic ${accessory.context.configuration.command_topic}`);
+      this.log.info(`Publish payload (${payload}) to topic ${accessory.context.configuration.command_topic}`);
       let actualPayload = '';
       if( payload !== null && payload.payload !== null ) {
         if( typeof payload.payload === 'string' ) {
