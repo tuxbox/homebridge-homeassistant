@@ -32,9 +32,9 @@ export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<boolean,
     this.log.debug(`Updating switch value to -> ${value}`);
     const stateOff = this.configuration.payload_off || this.configuration.state_off || 'off';
     const stateOn = this.configuration.payload_on || this.configuration.state_on || 'on';
-    if( value?.toString() === stateOff ) {
+    if( value?.toString() === stateOff.toString() ) {
       this.service.updateCharacteristic(this.platform.Characteristic.On, false);
-    } else if( value?.toString() === stateOn ) {
+    } else if( value?.toString() === stateOn.toString() ) {
       this.service.updateCharacteristic(this.platform.Characteristic.On, true);
     } else {
       this.platform.log.warn('unknown state value');
