@@ -60,26 +60,6 @@ export class MQTTPlatform {
             topic,
             payload: payload.toString(),
           });
-          /*
-          TODO
-          const accessory = this.accessories.find(
-            (accessory) => accessory.context.configuration.state_topic === topic ||
-                            accessory.context.configuration.command_topic === topic,
-          );
-          if( accessory ) {
-            if( topic === accessory?.context.configuration.state_topic ) {
-              this.log.debug(`publishing event ${accessory.UUID}:set-current-state} for topic ${topic}`);
-              EventEmitter.emit(`${accessory.UUID}:set-current-state`, { payload: payload.toString() } );
-            } else if( topic === accessory.context.configuration.command_topic ) {
-              this.log.debug(`publishing event ${accessory.UUID}:get-target-state} for topic ${topic}`);
-              EventEmitter.emit(`${accessory.UUID}:get-target-state`, { payload: payload.toString() } );
-            } else {
-              this.log.warn(`have not found an accessory for topic ${topic}`);
-            }
-          } else {
-            this.log.warn(`have not found an accessory for topic ${topic}`);
-          }
-          */
         }
       } else {
         this.log.warn('Received a message but topic was not set');

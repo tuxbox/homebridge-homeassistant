@@ -72,11 +72,17 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
         }
       }
     }
+    this.log.debug(`Payload2Template -> ${JSON.stringify(result)}`);
     return result;
   }
 
   protected renderValue(payload : Payload) : StateType {
-    return this.template.render(this.payloadToTemplateValue(payload));
+    try {
+      return this.template.render(this.payloadToTemplateValue(payload));
+    } catch (e) {
+      this.log.error(`error rendering template - ${e}`);
+    }
+    return null as StateType;
   }
 
   async handleHomekitCurrentStateGet() : Promise<StateType> {
