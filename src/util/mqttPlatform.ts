@@ -89,6 +89,7 @@ export class MQTTPlatform {
     }).bind(this));
     EventEmitter.on(Events.MqttPublish, (async (event : MqttPublishEvent) => {
       this.log.debug('Received MqttPublish Event');
+      this.log.debug(JSON.stringify(event));
       await this.publish(event.topic, event.payload);
     }).bind(this));
   }

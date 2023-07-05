@@ -106,7 +106,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
     }
   }
 
-  protected override mapActorTypeToPayload(value: CharacteristicValue): unknown {
+  protected override mapActorTypeToPayload(value: CharacteristicValue): string {
     let payload = this.configuration.payload_lock || 'lock';
     if( value === this.platform.Characteristic.LockTargetState.UNSECURED ) {
       payload = this.configuration.payload_unlock || 'unlock';

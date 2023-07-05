@@ -1,6 +1,6 @@
-import { DeviceConfiguration } from './device-configuration';
+import { ActorConfiguration } from './actorConfiguration';
 
-export type LockConfiguration = DeviceConfiguration & {
+export type LockConfiguration = ActorConfiguration & {
 
   payload_unlock: string;
   payload_lock: string;

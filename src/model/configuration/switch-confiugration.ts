@@ -1,6 +1,6 @@
-import { DeviceConfiguration } from './device-configuration';
+import { ActorConfiguration } from './actorConfiguration';
 
-export type SwitchConfiguration = DeviceConfiguration & {
+export type SwitchConfiguration = ActorConfiguration & {
 
   value_template: string;
   payload_on: string;
