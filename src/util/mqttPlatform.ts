@@ -113,7 +113,8 @@ export class MQTTPlatform {
   private async unsubscribe(topics : string | string[]) {
     this.log.debug(`Unsubscribing from topics ${topics}`);
     await this.client?.unsubscribe(topics);
-    this.subscriptions = this.subscriptions.filter((e) => topics.find((f) => f === e) == null);
+    const x = typeof topics === 'string' ? [topics] : topics;
+    this.subscriptions = this.subscriptions.filter((e) => x.find((f) => f === e) == null);
   }
 
   private async publish(topic: string, payload: string) {

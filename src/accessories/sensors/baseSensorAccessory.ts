@@ -68,7 +68,7 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
         try {
           result.value_json = JSON.parse(payload.payload);
         } catch (e) {
-          this.platform.log.warn(`Error parsing payload although defined as JSON payload (${payload.payload})`);
+          //this.platform.log.warn(`Error parsing payload although defined as JSON payload (${payload.payload})`);
         }
       }
     }
