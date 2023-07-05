@@ -1,9 +1,9 @@
 import { Service, PlatformAccessory } from 'homebridge';
 import { HomeassistantHomebridgePlatform } from '../../platform';
-import { DeviceConfiguration } from '../../model/device-configuration';
-import { Payload } from '../../model/mqtt-payload';
+import { DeviceConfiguration } from '../../model/configuration/device-configuration';
+import { Payload } from '../../model/mqtt/mqtt-payload';
 import { TemplatePayload } from '../../model/templatePayload';
-import { EventEmitter } from '../../event-channel';
+import { EventEmitter, Events } from '../../util/eventChannel';
 import nunjucks from 'nunjucks';
 
 /**
@@ -11,9 +11,9 @@ import nunjucks from 'nunjucks';
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export abstract class BaseSensorPlatformAccessory<StateType> {
+export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceConfiguration> {
   protected service: Service;
-  protected readonly configuration: DeviceConfiguration;
+  protected readonly configuration: T;
 
   protected currentState : StateType;
   protected template : any;
@@ -37,7 +37,7 @@ export abstract class BaseSensorPlatformAccessory<StateType> {
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.configuration.name);
     this.configureSensor();
 
-    EventEmitter.on(`${accessory.UUID}:set-current-state`, (payload : Payload) => {
+    EventEmitter.on(`${accessory.UUID}:${Events.SetCurrentState}`, (payload : Payload) => {
       const value = this.renderValue(payload);
       this.currentState = value;
       this.updateCharacteristic(value);

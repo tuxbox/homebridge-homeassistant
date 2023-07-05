@@ -1,4 +1,4 @@
-import { DeviceDetails } from './device-details';
+import { DeviceDetails } from '../mqtt/device-details';
 
 export type DeviceConfiguration = {
   unique_id : string;

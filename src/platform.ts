@@ -1,14 +1,9 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { EventEmitter } from './event-channel';
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { AsyncMqttClient } from 'async-mqtt';
-import MQTT from 'async-mqtt';
-import { DeviceConfiguration } from './model/device-configuration';
-import { LockConfiguration } from './model/lock-configuration';
-import { LockPlatformAccessory } from './accessories/lockAccessory';
-import { TemperatureSensorPlatformAccessory } from './accessories/sensors/temperatureSensorAccessory';
-import { HumiditySensorPlatformAccessory } from './accessories/sensors/humiditySensorAccessory';
+import { EventEmitter, Events } from './util/eventChannel';
+import { MQTTPlatform } from './util/mqttPlatform';
+import { DeviceConfigurator } from './util/deviceConfigurator';
+import { platform } from 'os';
 
 /**
  * HomebridgePlatform
@@ -16,13 +11,11 @@ import { HumiditySensorPlatformAccessory } from './accessories/sensors/humidityS
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
+
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
-  private readonly topicRegEx = new RegExp('^/([^/]+)/([^/]+)(?:/([^/]+))?/config$');
-
-  // this is used to track restored cached accessories
-  public readonly accessories: PlatformAccessory[] = [];
-  private client : AsyncMqttClient | null = null;
+  private readonly mqtt : MQTTPlatform;
+  private readonly deviceConfigurator : DeviceConfigurator;
 
   constructor(
     public readonly log: Logger,
@@ -30,7 +23,8 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
-
+    this.mqtt = new MQTTPlatform(config, log);
+    this.deviceConfigurator = new DeviceConfigurator(api, this);
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
@@ -41,54 +35,10 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
       //this.discoverDevices();
       log.info(`Configuration: ${JSON.stringify(this.config)}`);
       try {
-        log.info(`Connecting to ${this.config.host}`);
-        this.client = await MQTT.connectAsync(`${this.config.protocol}://${this.config.host}:${this.config.port}`, {
-          username: this.config.username,
-          password: this.config.password,
-        }, true);
-        log.info(`connected to ${this.config.protocol}://${this.config.username}@${this.config.host}:${this.config.port}`);
-        log.info('registering MQTT message handler');
-        this.client?.on('message', async (topic, payload) => {
-          if( topic !== null ) {
-            if( topic.startsWith(this.config.homeassistantBaseTopic) ) {
-              this.log.info(`Received configuration on topic '${topic}'`);
-              if( payload !== null ) {
-                try {
-                  const jsonPayload = JSON.parse(payload.toString());
-                  this.handleDeviceConfiguration(topic, jsonPayload as DeviceConfiguration);
-                } catch (e: unknown) {
-                  this.log.error(`error handling payload on topic ${topic} - ${JSON.stringify(e)}`);
-                }
-              } else {
-                this.log.warn('payload was empty');
-              }
-            } else {
-              this.log.info(`Received event message in ${topic}`);
-              this.log.info(`Payload: ${payload.toString()}`);
-              const accessory = this.accessories.find(
-                (accessory) => accessory.context.configuration.state_topic === topic ||
-                               accessory.context.configuration.command_topic === topic,
-              );
-              if( accessory ) {
-                if( topic === accessory?.context.configuration.state_topic ) {
-                  this.log.debug(`publishing event ${accessory.UUID}:set-current-state} for topic ${topic}`);
-                  EventEmitter.emit(`${accessory.UUID}:set-current-state`, { payload: payload.toString() } );
-                } else if( topic === accessory.context.configuration.command_topic ) {
-                  this.log.debug(`publishing event ${accessory.UUID}:get-target-state} for topic ${topic}`);
-                  EventEmitter.emit(`${accessory.UUID}:get-target-state`, { payload: payload.toString() } );
-                } else {
-                  this.log.warn(`have not found an accessory for topic ${topic}`);
-                }
-              } else {
-                this.log.warn(`have not found an accessory for topic ${topic}`);
-              }
-            }
-          } else {
-            this.log.warn('Received a message but topic was not set');
-          }
-        });
-        log.info(`subscribing to topic "${this.config.homeassistantBaseTopic}/#"`);
-        this.client?.subscribe(`${this.config.homeassistantBaseTopic}/#`);
+        await this.mqtt.connect();
+        await this.mqtt.setup();
+        this.deviceConfigurator.setup();
+        EventEmitter.emit(Events.MqttSubscribe, `${this.config.homeassistantBaseTopic}/#`);
       } catch (e : unknown) {
         log.error(JSON.stringify(e));
       }
@@ -101,133 +51,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
-
-    // add the restored accessory to the accessories cache so we can track if it has already been registered
-    this.accessories.push(accessory);
-  }
-
-
-  handleDeviceConfiguration(topic: string, configuration : DeviceConfiguration ) {
-    this.log.debug(`Handling device configuration received on topic "${topic}"`);
-    const configurationTopic = topic.substring(this.config.homeassistantBaseTopic.length);
-    const result = this.topicRegEx.exec(configurationTopic);
-    if( result !== null ) {
-      const deviceType = result[1];
-      const uuid = this.api.hap.uuid.generate(configuration.unique_id);
-      const existingAccessory = this.accessories.find((accessory) => accessory.UUID === uuid);
-      if( deviceType === 'lock' ) {
-        this.handleLockConfiguration(uuid, existingAccessory, configuration);
-      } else if( deviceType === 'sensor' ) {
-        if( configuration.device_class ) {
-          if( configuration.device_class === 'temperature' ) {
-            this.handleTemperatureSensorConfiguration(uuid, existingAccessory, configuration);
-          } else if( configuration.device_class === 'humidity') {
-            this.handleHumiditySensorConfiguration(uuid, existingAccessory, configuration);
-          } else {
-            this.log.warn(`found a currently unsupported device_class '${configuration.device_class}' - ignoring sensor`);
-          }
-        } else {
-          this.log.warn(`Found a sensor without a device_class specified - It will be ignored (${topic})`);
-        }
-      } else {
-        this.log.warn(`Unhandled device type ${deviceType}`);
-      }
-    } else {
-      this.log.error(`Failed to extract configuration details from topic "${topic}"`);
-    }
-  }
-
-  handleLockConfiguration(uuid: string, existingAccessory: PlatformAccessory | undefined, configuration: DeviceConfiguration) {
-    const lockConfiguration = configuration as LockConfiguration;
-    let usedAccessory : PlatformAccessory;
-    if( existingAccessory ) {
-      this.log.info(`Found an accessory with UUID ${uuid}`);
-      new LockPlatformAccessory(this, existingAccessory);
-      usedAccessory = existingAccessory;
-    } else {
-      this.log.info(`No accessory found with UUID ${uuid}`);
-      this.log.info('Creating a new lock accessory');
-      const accessory = new this.api.platformAccessory(lockConfiguration.name, uuid);
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
-      accessory.context.device_type = 'lock';
-      accessory.context.configuration = lockConfiguration;
-      // create the accessory handler for the newly create accessory
-      // this is imported from `platformAccessory.ts`
-      new LockPlatformAccessory(this, accessory);
-
-      // link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      usedAccessory = accessory;
-    }
-    this.client?.subscribe(usedAccessory.context.configuration.state_topic);
-    this.client?.subscribe(usedAccessory.context.configuration.command_topic);
-    EventEmitter.on(`${usedAccessory.UUID}:set-target-state`, async (payload) => {
-      this.log.debug(`Publish payload (${payload}) to topic ${usedAccessory.context.configuration.command_topic}`);
-      let actualPayload = '';
-      if( payload !== null && payload.payload !== null ) {
-        if( typeof payload.payload === 'string' ) {
-          this.log.debug('received payload is of type string - just passing it on');
-          actualPayload = payload.payload;
-        } else {
-          this.log.debug('received payload is not of type string - JSON.stringify applied');
-          actualPayload = JSON.stringify(payload.payload);
-        }
-      }
-      this.client?.publish(usedAccessory.context.configuration.command_topic, actualPayload);
-    });
-  }
-
-  handleTemperatureSensorConfiguration(uuid: string, existingAccessory: PlatformAccessory | undefined, configuration: DeviceConfiguration) {
-    let usedAccessory : PlatformAccessory;
-    if( existingAccessory ) {
-      this.log.info(`Found an accessory with UUID ${uuid}`);
-      new TemperatureSensorPlatformAccessory(this, existingAccessory);
-      usedAccessory = existingAccessory;
-    } else {
-      this.log.info(`No accessory found with UUID ${uuid}`);
-      this.log.info('Creating a new temperature sensor accessory');
-      const accessory = new this.api.platformAccessory(configuration.name, uuid);
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
-      accessory.context.device_type = 'sensor';
-      accessory.context.device_class = 'temperature';
-      accessory.context.configuration = configuration;
-      // create the accessory handler for the newly create accessory
-      // this is imported from `platformAccessory.ts`
-      new TemperatureSensorPlatformAccessory(this, accessory);
-
-      // link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      usedAccessory = accessory;
-    }
-    this.client?.subscribe(usedAccessory.context.configuration.state_topic);
-  }
-
-  handleHumiditySensorConfiguration(uuid: string, existingAccessory: PlatformAccessory | undefined, configuration: DeviceConfiguration) {
-    let usedAccessory : PlatformAccessory;
-    if( existingAccessory ) {
-      this.log.info(`Found an accessory with UUID ${uuid}`);
-      new HumiditySensorPlatformAccessory(this, existingAccessory);
-      usedAccessory = existingAccessory;
-    } else {
-      this.log.info(`No accessory found with UUID ${uuid}`);
-      this.log.info('Creating a new humidity sensor accessory');
-      const accessory = new this.api.platformAccessory(configuration.name, uuid);
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
-      accessory.context.device_type = 'sensor';
-      accessory.context.device_class = 'humidity';
-      accessory.context.configuration = configuration;
-      // create the accessory handler for the newly create accessory
-      // this is imported from `platformAccessory.ts`
-      new HumiditySensorPlatformAccessory(this, accessory);
-
-      // link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      usedAccessory = accessory;
-    }
-    this.client?.subscribe(usedAccessory.context.configuration.state_topic);
+    this.deviceConfigurator.configureAccessory(accessory);
   }
 
 }
