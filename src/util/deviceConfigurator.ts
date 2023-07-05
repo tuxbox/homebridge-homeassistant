@@ -39,6 +39,7 @@ export class DeviceConfigurator {
         } else {
           this.log.info('configuring existing accessory');
         }
+        this.configureAccessory(usedAccessory);
         configurator.configure(usedAccessory);
       } else {
         this.log.info(`accessory type ${payload.deviceType} not yet supported`)

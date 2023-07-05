@@ -39,6 +39,7 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         this.deviceConfigurator.setup();
         subscribeTopic({
           topic: `${this.config.homeassistantBaseTopic}/#`,
+          opts: null,
         });
       } catch (e : unknown) {
         log.error(JSON.stringify(e));

@@ -33,6 +33,7 @@ export class LockConfigurator implements Configurator<LockConfiguration> {
       publishMessage({
         topic: accessory.context.configuration.command_topic,
         payload: actualPayload,
+        opts: null,
       });
     });
   }

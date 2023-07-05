@@ -44,6 +44,7 @@ export class SensorConfigurator implements Configurator<DeviceConfiguration> {
       publishMessage({
         topic: accessory.context.configuration.command_topic,
         payload: actualPayload,
+        opts: null,
       });
     });
   }
