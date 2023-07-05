@@ -51,11 +51,9 @@ export class DeviceConfigurator {
     //clean up
     //after 15s we presume all configurations received and all registered accessories that have not yet been configured to be obsolete
     setTimeout(() => {
-      const configuratorTypes = Array.from(this.configurators.keys());
       const obsoleteAccessories = this.cachedAccessories.filter(
         // eslint-disable-next-line eqeqeq
-        (accessory) => this.configuredAccessories.find((uuid) => uuid === accessory.UUID) == null ||
-                       configuratorTypes.find((key) => key === accessory.context?.device_type) == null,
+        (accessory) => this.configuredAccessories.find((uuid) => uuid === accessory.UUID) == null,
       );
       this.log.info(`Found ${obsoleteAccessories.length} obsolete accessories`);
 
