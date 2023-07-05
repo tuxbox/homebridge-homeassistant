@@ -80,7 +80,7 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     try {
       return this.template.render(this.payloadToTemplateValue(payload));
     } catch (e) {
-      this.log.error(`error rendering template - ${e}`);
+      this.log.error(`error rendering template - ${JSON.stringify(this.template)} - ${e}`);
     }
     return null as unknown as StateType;
   }

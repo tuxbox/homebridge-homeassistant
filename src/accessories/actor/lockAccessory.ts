@@ -77,7 +77,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
   override updateCharacteristic(value: string) {
     this.platform.log.info('Handling MQTT current state event');
     this.platform.log.info(`received payload ${value}`);
-    if( value === this.configuration.state_locked ) {
+    if( value?.toString() === this.configuration.state_locked ) {
       this.service.updateCharacteristic(
         this.platform.Characteristic.LockCurrentState,
         this.platform.Characteristic.LockCurrentState.SECURED,
@@ -87,7 +87,7 @@ export class LockPlatformAccessory extends BaseActorPlatformAccessory<string, Ch
         this.platform.Characteristic.LockTargetState,
         this.platform.Characteristic.LockTargetState.SECURED,
       );
-    } else if( value === this.configuration.state_unlocked ) {
+    } else if( value?.toString() === this.configuration.state_unlocked ) {
       this.service.updateCharacteristic(
         this.platform.Characteristic.LockCurrentState,
         this.platform.Characteristic.LockCurrentState.UNSECURED,

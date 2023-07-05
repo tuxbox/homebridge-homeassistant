@@ -15,7 +15,7 @@ export abstract class BaseActorPlatformAccessory<StateType, ActorType, T extends
   ) {
     super(platform, accessory);
     EventEmitter.on(`${Events.MqttMessageReceived}:${accessory.context.configuration.command_topic}`, ((payload : Payload) => {
-      this.log.debug(`Handling MQTT command update for accessory ${this.accessory.displayName} - noop`);
+      this.log.debug(`Handling MQTT command update for accessory ${this.accessory.displayName}`);
     }).bind(this));
   }
 
