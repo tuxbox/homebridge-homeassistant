@@ -4,11 +4,13 @@ import MQTT from 'async-mqtt';
 import { EventEmitter, Events } from './eventChannel';
 import { MqttPublishEvent } from '../model/mqtt/mqttPublishEvent';
 import { MqttSubscribeEvent } from '../model/mqtt/mqttSubscribeEvent';
+import { MqttUnsubscribeEvent } from '../model/mqtt/mqttUnsubscribeEvent';
 
 export class MQTTPlatform {
 
   private readonly topicRegEx = new RegExp('^([^/]+)/([^/]+)/(?:([^/]+)/)?config$');
   private client : AsyncMqttClient | null = null;
+  private subscriptions : string[] = [];
 
 
   constructor(private readonly configuration : PlatformConfig, private readonly log : Logger) {
@@ -92,17 +94,32 @@ export class MQTTPlatform {
       this.log.debug(JSON.stringify(event));
       await this.publish(event.topic, event.payload);
     }).bind(this));
+    EventEmitter.on(Events.MqttUnsubscribe, (async (event: MqttUnsubscribeEvent) => {
+      this.log.debug('Received MqttUnsubscribe Event');
+      await this.unsubscribe(event.topics);
+    }).bind(this));
   }
 
   private async subscribe(topic : string) {
     this.log.debug(`Subscribing to topic ${topic}`);
-    this.client?.subscribe(topic);
+    if( this.subscriptions.find((e) => e === topic) !== null ) {
+      await this.client?.subscribe(topic);
+      this.subscriptions.push(topic);
+    } else {
+      this.log.info(`Already subscribed to ${topic}`);
+    }
+  }
+
+  private async unsubscribe(topics : string | string[]) {
+    this.log.debug(`Unsubscribing from topics ${topics}`);
+    await this.client?.unsubscribe(topics);
+    this.subscriptions = this.subscriptions.filter((e) => topics.find((f) => f === e) == null);
   }
 
   private async publish(topic: string, payload: string) {
     this.log.debug(`Publish data to topic ${topic}`);
     this.log.debug(`payload: ${payload?.toString()}`);
-    this.client?.publish(topic, payload);
+    await this.client?.publish(topic, payload);
   }
 
 }

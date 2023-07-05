@@ -6,7 +6,7 @@ import { DeviceConfiguration } from '../model/configuration/device-configuration
 import { AccessoryConfigurationEvent } from '../model/events/accessoryConfigurationEvent';
 import { HomeassistantHomebridgePlatform } from '../platform';
 import { Configurator } from './deviceConfigurator/configurator';
-import { subscribeTopic } from './mqttHelpers';
+import { subscribeTopic, unsubscribeTopics } from './mqttHelpers';
 import { SwitchConfigurator } from './deviceConfigurator/switchConfigurator';
 
 export class DeviceConfigurator {
@@ -59,6 +59,19 @@ export class DeviceConfigurator {
       );
       this.log.info(`Found ${obsoleteAccessories.length} obsolete accessories`);
 
+      const unsubscriptions = obsoleteAccessories.map((e) => {
+        const result : string[] = [];
+        if( e.context?.configuration?.command_topic ) {
+          result.push(e.context.configuration.command_topic);
+        }
+        if( e.context?.configuration?.state_topic ) {
+          result.push(e.context.configuration.state_topic);
+        }
+        return result;
+      }).reduce((prev, cur) => prev.concat(cur), []);
+      unsubscribeTopics({
+        topics: unsubscriptions,
+      });
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, obsoleteAccessories);
       // eslint-disable-next-line eqeqeq
       this.cachedAccessories = this.cachedAccessories.filter((item) => obsoleteAccessories.find((x) => x.UUID == item.UUID) == null);
