@@ -5,6 +5,7 @@ import { TemperatureSensorPlatformAccessory } from '../../accessories/sensors/te
 import { HumiditySensorPlatformAccessory } from '../../accessories/sensors/humiditySensorAccessory';
 import { EventEmitter, Events } from '../eventChannel';
 import { Configurator } from './configurator';
+import { publishMessage } from '../mqttHelpers';
 
 export class SensorConfigurator implements Configurator<DeviceConfiguration> {
 
@@ -40,7 +41,10 @@ export class SensorConfigurator implements Configurator<DeviceConfiguration> {
           actualPayload = JSON.stringify(payload.payload);
         }
       }
-      EventEmitter.emit(Events.MqttPublish, accessory.context.configuration.command_topic, actualPayload);
+      publishMessage({
+        topic: accessory.context.configuration.command_topic,
+        payload: actualPayload,
+      });
     });
   }
 

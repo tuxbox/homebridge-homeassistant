@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory } from 'homebridge';
+import { Service, PlatformAccessory, Logger } from 'homebridge';
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { DeviceConfiguration } from '../../model/configuration/device-configuration';
 import { Payload } from '../../model/mqtt/mqtt-payload';

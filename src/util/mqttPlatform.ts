@@ -2,6 +2,8 @@ import { AsyncMqttClient } from 'async-mqtt';
 import { Logger, PlatformConfig } from 'homebridge';
 import MQTT from 'async-mqtt';
 import { EventEmitter, Events } from './eventChannel';
+import { MqttPublishEvent } from '../model/mqtt/mqttPublishEvent';
+import { MqttSubscribeEvent } from '../model/mqtt/mqttSubscribeEvent';
 
 export class MQTTPlatform {
 
@@ -81,22 +83,22 @@ export class MQTTPlatform {
         this.log.warn('Received a message but topic was not set');
       }
     });
-    EventEmitter.on(Events.MqttSubscribe, (async (topic : string) => {
+    EventEmitter.on(Events.MqttSubscribe, (async (event : MqttSubscribeEvent) => {
       this.log.debug('Received MqttSubscribe Event');
-      await this.subscribe(topic);
+      await this.subscribe(event.topic);
     }).bind(this));
-    EventEmitter.on(Events.MqttPublish, (async ( topic : string, payload : string ) => {
+    EventEmitter.on(Events.MqttPublish, (async (event : MqttPublishEvent) => {
       this.log.debug('Received MqttPublish Event');
-      await this.publish(topic, payload);
+      await this.publish(event.topic, event.payload);
     }).bind(this));
   }
 
-  async subscribe(topic : string) {
+  private async subscribe(topic : string) {
     this.log.debug(`Subscribing to topic ${topic}`);
     this.client?.subscribe(topic);
   }
 
-  async publish(topic: string, payload: string) {
+  private async publish(topic: string, payload: string) {
     this.log.debug(`Publish data to topic ${topic}`);
     this.log.debug(`payload: ${payload?.toString()}`);
     this.client?.publish(topic, payload);

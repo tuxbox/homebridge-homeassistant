@@ -6,6 +6,7 @@ import { DeviceConfiguration } from '../model/configuration/device-configuration
 import { AccessoryConfigurationEvent } from '../model/events/accessoryConfigurationEvent';
 import { HomeassistantHomebridgePlatform } from '../platform';
 import { Configurator } from './deviceConfigurator/configurator';
+import { subscribeTopic } from './mqttHelpers';
 
 export class DeviceConfigurator {
 
@@ -62,11 +63,18 @@ export class DeviceConfigurator {
   }
 
   configureAccessory(accessory: PlatformAccessory) {
+    this.log.debug(`configuring accessory ${accessory.displayName}`);
     if( accessory.context.configuration.state_topic ) {
-      EventEmitter.emit(Events.MqttSubscribe, accessory.context.configuration.state_topic);
+      subscribeTopic({
+        topic: accessory.context.configuration.state_topic,
+        opts: null,
+      });
     }
     if( accessory.context.configuration.command_topic ) {
-      EventEmitter.emit(Events.MqttSubscribe, accessory.context.configuration.command_topic);
+      subscribeTopic({
+        topic: accessory.context.configuration.command_topic,
+        opts: null,
+      });
     }
     this.cachedAccessories.push(accessory);
   }

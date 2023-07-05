@@ -1,9 +1,8 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { EventEmitter, Events } from './util/eventChannel';
 import { MQTTPlatform } from './util/mqttPlatform';
 import { DeviceConfigurator } from './util/deviceConfigurator';
-import { platform } from 'os';
+import { subscribeTopic } from './util/mqttHelpers';
 
 /**
  * HomebridgePlatform
@@ -38,7 +37,9 @@ export class HomeassistantHomebridgePlatform implements DynamicPlatformPlugin {
         await this.mqtt.connect();
         await this.mqtt.setup();
         this.deviceConfigurator.setup();
-        EventEmitter.emit(Events.MqttSubscribe, `${this.config.homeassistantBaseTopic}/#`);
+        subscribeTopic({
+          topic: `${this.config.homeassistantBaseTopic}/#`,
+        });
       } catch (e : unknown) {
         log.error(JSON.stringify(e));
       }

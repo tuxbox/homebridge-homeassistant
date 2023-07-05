@@ -4,6 +4,7 @@ import { HomeassistantHomebridgePlatform } from '../../platform';
 import { Configurator } from './configurator';
 import { EventEmitter, Events } from '../eventChannel';
 import { LockPlatformAccessory } from '../../accessories/actor/lockAccessory';
+import { publishMessage } from '../mqttHelpers';
 
 export class LockConfigurator implements Configurator<LockConfiguration> {
 
@@ -29,7 +30,10 @@ export class LockConfigurator implements Configurator<LockConfiguration> {
           actualPayload = JSON.stringify(payload.payload);
         }
       }
-      EventEmitter.emit(Events.MqttPublish, accessory.context.configuration.command_topic, actualPayload);
+      publishMessage({
+        topic: accessory.context.configuration.command_topic,
+        payload: actualPayload,
+      });
     });
   }
 
