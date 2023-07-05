@@ -1,4 +1,4 @@
-import { DeviceConfiguration } from './mqtt/device-configuration';
+import { DeviceConfiguration } from './device-configuration';
 
 export type SwitchConfiguration = DeviceConfiguration & {
 

@@ -45,7 +45,6 @@ export class DeviceConfigurator {
       }
 
     }).bind(this));
-    this.cachedAccessories.filter(() => )
     //clean up
     //after 15s we presume all configurations received and all registered accessories that have not yet been configured to be obsolete
     setTimeout(() => {
@@ -76,37 +75,5 @@ export class DeviceConfigurator {
   registerCurrentlyConfiguredAccessory(uuid : string) {
     this.configuredAccessories.push(uuid);
   }
-
-
-  handleDeviceConfiguration(topic: string, configuration : DeviceConfiguration ) {
-    this.log.debug(`Handling device configuration received on topic "${topic}"`);
-    
-    if( result !== null ) {
-      
-      const uuid = this.api.hap.uuid.generate(configuration.unique_id);
-      this.allConfiguredAccessories.push(uuid);
-      
-      if( deviceType === 'lock' ) {
-        this.handleLockConfiguration(uuid, existingAccessory, configuration);
-      } else if( deviceType === 'sensor' ) {
-        if( configuration.device_class ) {
-          if( configuration.device_class === 'temperature' ) {
-            this.handleTemperatureSensorConfiguration(uuid, existingAccessory, configuration);
-          } else if( configuration.device_class === 'humidity') {
-            this.handleHumiditySensorConfiguration(uuid, existingAccessory, configuration);
-          } else {
-            this.log.warn(`found a currently unsupported device_class '${configuration.device_class}' - ignoring sensor`);
-          }
-        } else {
-          this.log.warn(`Found a sensor without a device_class specified - It will be ignored (${topic})`);
-        }
-      } else {
-        this.log.warn(`Unhandled device type ${deviceType}`);
-      }
-    } else {
-      this.log.error(`Failed to extract configuration details from topic "${topic}"`);
-    }
-  }
-
 
 }

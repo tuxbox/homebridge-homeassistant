@@ -1,10 +1,8 @@
 import { API, Logger, PlatformAccessory } from 'homebridge';
 import { LockConfiguration } from '../../model/configuration/lock-configuration';
-import { LockPlatformAccessory } from '../../accessories/actor/lockAccessory';
 import { HomeassistantHomebridgePlatform } from '../../platform';
-import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
-import { EventEmitter, Events } from '../eventChannel';
 import { Configurator } from './configurator';
+import { EventEmitter, Events } from '../eventChannel';
 
 export class LockConfigurator implements Configurator<LockConfiguration> {
 

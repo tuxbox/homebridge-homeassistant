@@ -6,7 +6,7 @@ import { EventEmitter, Events } from './eventChannel';
 export class MQTTPlatform {
 
   private readonly topicRegEx = new RegExp('^/([^/]+)/([^/]+)(?:/([^/]+))?/config$');
-  private client : AsyncMqttClient | null;
+  private client : AsyncMqttClient | null = null;
 
 
   constructor(private readonly configuration : PlatformConfig, private readonly log : Logger) {
@@ -28,22 +28,26 @@ export class MQTTPlatform {
       if( topic !== null ) {
         if( topic.startsWith(this.configuration.homeassistantBaseTopic) ) {
           const result = this.topicRegEx.exec(topic);
-          const deviceType = result[1];
-          this.log.info(`Received configuration on topic '${topic}'`);
-          if( payload !== null ) {
-            try {
-              const jsonPayload = JSON.parse(payload.toString());
-              EventEmitter.emit(Events.ConfigureDevice, {
-                topic,
-                deviceType,
-                payload: jsonPayload,
-              });
-              //this.handleDeviceConfiguration(topic, jsonPayload as DeviceConfiguration);
-            } catch (e: unknown) {
-              this.log.error(`error handling payload on topic ${topic} - ${JSON.stringify(e)}`);
+          if( result ) {
+            const deviceType = result[1];
+            this.log.info(`Received configuration on topic '${topic}'`);
+            if( payload !== null ) {
+              try {
+                const jsonPayload = JSON.parse(payload.toString());
+                EventEmitter.emit(Events.ConfigureDevice, {
+                  topic,
+                  deviceType,
+                  payload: jsonPayload,
+                });
+                //this.handleDeviceConfiguration(topic, jsonPayload as DeviceConfiguration);
+              } catch (e: unknown) {
+                this.log.error(`error handling payload on topic ${topic} - ${JSON.stringify(e)}`);
+              }
+            } else {
+              this.log.warn('payload was empty');
             }
           } else {
-            this.log.warn('payload was empty');
+            this.log.info(`configuration message received on topic ${topic}`);
           }
         } else {
           this.log.info(`Received event message in ${topic}`);

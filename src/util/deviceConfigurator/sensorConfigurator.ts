@@ -2,7 +2,6 @@ import { API, Logger, PlatformAccessory } from 'homebridge';
 import { DeviceConfiguration } from '../../model/configuration/device-configuration';
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { TemperatureSensorPlatformAccessory } from '../../accessories/sensors/temperatureSensorAccessory';
-import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 import { HumiditySensorPlatformAccessory } from '../../accessories/sensors/humiditySensorAccessory';
 import { EventEmitter, Events } from '../eventChannel';
 import { Configurator } from './configurator';
