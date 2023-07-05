@@ -15,7 +15,6 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
     protected readonly accessory: PlatformAccessory,
   ) {
     super(platform, accessory);
-    this.currentState = 0.0;
   }
 
   override createService() : Service {

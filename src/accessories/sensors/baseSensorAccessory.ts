@@ -43,8 +43,8 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     EventEmitter.on(`${Events.MqttMessageReceived}:${accessory.context.configuration.state_topic}`, ((payload : Payload) => {
       this.log.debug(`Handling MQTT state update for accessory ${this.accessory.displayName}`);
       const value = this.renderValue(payload);
-      this.currentState = value;
-      this.updateCharacteristic(value);
+      this.currentState = this.convertStatePayloadToStateValue(value);
+      this.updateCharacteristic(this.currentState);
     }).bind(this));
 
   }
@@ -76,14 +76,19 @@ export abstract class BaseSensorPlatformAccessory<StateType, T extends DeviceCon
     return result;
   }
 
-  protected renderValue(payload : Payload) : StateType {
+  protected renderValue(payload : Payload) : string {
     try {
       return this.template.render(this.payloadToTemplateValue(payload));
     } catch (e) {
       this.log.error(`error rendering template - ${JSON.stringify(this.template)} - ${e}`);
     }
-    return null as unknown as StateType;
+    return '';
   }
+
+  protected convertStatePayloadToStateValue(value: string) : StateType {
+    return value as unknown as StateType;
+  }
+
 
   async handleHomekitCurrentStateGet() : Promise<StateType> {
     return this.currentState!;

@@ -28,20 +28,26 @@ export class SwitchPlatformAccessory extends BaseActorPlatformAccessory<boolean,
       .onSet(this.handleHomekitTargetStateSet.bind(this));
   }
 
-  protected updateCharacteristic(value: CharacteristicValue) {
-    this.log.debug(`Updating switch value to -> ${value}`);
+  protected convertStatePayloadToStateValue(value: string): boolean {
+    let result = false;
     const stateOff = this.configuration.payload_off || this.configuration.state_off || 'off';
     const stateOn = this.configuration.payload_on || this.configuration.state_on || 'on';
     if( value?.toString() === stateOff.toString() ) {
-      this.service.updateCharacteristic(this.platform.Characteristic.On, false);
+      result = false;
     } else if( value?.toString() === stateOn.toString() ) {
-      this.service.updateCharacteristic(this.platform.Characteristic.On, true);
+      result = true;
     } else {
       this.platform.log.warn('unknown state value');
-      this.platform.log.debug(`state_on: ${this.configuration.state_on}`);
-      this.platform.log.debug(`state_off: ${this.configuration.state_off}`);
+      this.platform.log.debug(`state_on: ${stateOn}`);
+      this.platform.log.debug(`state_off: ${stateOff}`);
       this.platform.log.debug(`actual state: ${value}`);
     }
+    return result;
+  }
+
+  protected updateCharacteristic(value: boolean) {
+    this.log.debug(`Updating switch value to -> ${value}`);
+    this.service.updateCharacteristic(this.platform.Characteristic.On, value);
   }
 
 }

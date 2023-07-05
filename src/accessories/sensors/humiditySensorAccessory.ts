@@ -15,7 +15,6 @@ export class HumiditySensorPlatformAccessory extends BaseSensorPlatformAccessory
     protected readonly accessory: PlatformAccessory,
   ) {
     super(platform, accessory);
-    this.currentState = 0.0;
   }
 
   override createService() : Service {
