@@ -36,11 +36,11 @@ export class DeviceConfigurator {
           this.log.info(`No accessory found with UUID ${uuid}`);
           this.log.info('Creating a new accessory');
           usedAccessory = new this.api.platformAccessory(configuration.name, uuid);
-          usedAccessory.context.configuration = configuration;
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
         } else {
           this.log.info('configuring existing accessory');
         }
+        usedAccessory.context.configuration = configuration;
         this.configureAccessory(usedAccessory);
         configurator.configure(usedAccessory);
         this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
