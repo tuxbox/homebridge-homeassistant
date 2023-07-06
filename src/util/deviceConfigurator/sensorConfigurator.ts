@@ -3,9 +3,7 @@ import { DeviceConfiguration } from '../../model/configuration/device-configurat
 import { HomeassistantHomebridgePlatform } from '../../platform';
 import { TemperatureSensorPlatformAccessory } from '../../accessories/sensors/temperatureSensorAccessory';
 import { HumiditySensorPlatformAccessory } from '../../accessories/sensors/humiditySensorAccessory';
-import { EventEmitter, Events } from '../eventChannel';
 import { Configurator } from './configurator';
-import { publishMessage } from '../mqttHelpers';
 
 export class SensorConfigurator implements Configurator<DeviceConfiguration> {
 

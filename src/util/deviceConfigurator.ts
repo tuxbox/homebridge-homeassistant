@@ -33,17 +33,21 @@ export class DeviceConfigurator {
         const uuid = this.api.hap.uuid.generate(configuration.unique_id);
         let usedAccessory = this.cachedAccessories.find((accessory) => accessory.UUID === uuid);
         if( usedAccessory == null ) {
-          this.log.info(`No accessory found with UUID ${uuid}`);
-          this.log.info('Creating a new accessory');
-          usedAccessory = new this.api.platformAccessory(configuration.name, uuid);
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
+          if( payload.deviceType !== 'sensor' || (payload.deviceType === 'sensor' && payload.payload.device_class === 'battery')) {
+            this.log.info(`No accessory found with UUID ${uuid}`);
+            this.log.info('Creating a new accessory');
+            usedAccessory = new this.api.platformAccessory(configuration.name, uuid);
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
+          }
         } else {
           this.log.info('configuring existing accessory');
         }
-        usedAccessory.context.configuration = configuration;
-        this.configureAccessory(usedAccessory);
-        configurator.configure(usedAccessory);
-        this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
+        if( usedAccessory ) {
+          usedAccessory.context.configuration = configuration;
+          this.configureAccessory(usedAccessory);
+          configurator.configure(usedAccessory);
+          this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
+        }
       } else {
         this.log.info(`accessory type ${payload.deviceType} not yet supported`);
       }
