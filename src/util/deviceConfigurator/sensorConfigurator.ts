@@ -4,6 +4,7 @@ import { HomeassistantHomebridgePlatform } from '../../platform';
 import { TemperatureSensorPlatformAccessory } from '../../accessories/sensors/temperatureSensorAccessory';
 import { HumiditySensorPlatformAccessory } from '../../accessories/sensors/humiditySensorAccessory';
 import { Configurator } from './configurator';
+import { BatterySensorPlatformAccessory } from '../../accessories/sensors/batterySensorAccessory';
 
 export class SensorConfigurator implements Configurator<DeviceConfiguration> {
 
@@ -18,6 +19,8 @@ export class SensorConfigurator implements Configurator<DeviceConfiguration> {
       new TemperatureSensorPlatformAccessory(this.platform, accessory);
     } else if (accessory.context.device_class === 'humidity' ) {
       new HumiditySensorPlatformAccessory(this.platform, accessory);
+    } else if( accessory.context.device_class === 'battery' ) {
+      new BatterySensorPlatformAccessory(this.platform, accessory);
     } else {
       this.log.warn(`No sensor implementation for device_class ${accessory.context.device_class} available`);
     }

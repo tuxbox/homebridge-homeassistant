@@ -1,4 +1,4 @@
-import { CharacteristicValue, Service } from 'homebridge';
+import { Characteristic, CharacteristicValue, Service } from 'homebridge';
 import { DeviceConfiguration } from '../../model/configuration/device-configuration';
 import { BaseSensorPlatformAccessory } from './baseSensorAccessory';
 
@@ -19,6 +19,8 @@ export class BatterySensorPlatformAccessory extends BaseSensorPlatformAccessory<
       .onGet(this.handleHomekitCurrentStateGet.bind(this));
     this.service.getCharacteristic(this.platform.Characteristic.StatusLowBattery)
       .onGet(this.handleHomekitStatusLowBatteryGet.bind(this));
+    this.service.getCharacteristic(this.platform.Characteristic.ChargingState)
+      .onGet(this.handleHomekitChargingStateGet.bind(this));
   }
 
   protected updateCharacteristic(value: number) {
@@ -29,6 +31,10 @@ export class BatterySensorPlatformAccessory extends BaseSensorPlatformAccessory<
     return this.currentState < 15.0 ?
       this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW :
       this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+  }
+
+  protected async handleHomekitChargingStateGet() : Promise<CharacteristicValue> {
+    return this.platform.Characteristic.ChargingState.NOT_CHARGEABLE;
   }
 
 }
