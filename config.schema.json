@@ -37,11 +37,11 @@
         "default": 1883,
         "maximum": 65535
       },
-      "homeassistantBaseTopic": {
-        "title": "Homeassistant Config Topic",
+      "homebridgeConfigTopic": {
+        "title": "Homebridge Config Topic",
         "type": "string",
         "required": true,
-        "default": "homeassistant"
+        "default": "config/homebridge-811503bd-ae80-42c0-afc4-a82f3d537415"
       },
       "username": {
         "title": "Username",
