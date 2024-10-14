@@ -1,8 +1,8 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { MQTTPlatform } from './util/mqttPlatform';
-//import { DeviceConfigurator } from './util/deviceConfigurator';
-//import { subscribeTopic } from './util/mqttHelpers';
+import { DeviceConfigurator } from './util/deviceConfigurator';
+import { subscribeTopic } from './util/mqttHelpers';
 
 /**
  * HomebridgePlatform
@@ -14,7 +14,7 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
   private readonly mqtt : MQTTPlatform;
-  //private readonly deviceConfigurator : DeviceConfigurator;
+  private readonly deviceConfigurator : DeviceConfigurator;
 
   constructor(
     public readonly log: Logger,
@@ -24,7 +24,7 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
     this.log.debug('Finished initializing platform:', this.config.name);
     this.mqtt = new MQTTPlatform(config, log);
 
-    //##this.deviceConfigurator = new DeviceConfigurator(api, this);
+    this.deviceConfigurator = new DeviceConfigurator(api, this);
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -38,11 +38,11 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
       try {
         await this.mqtt.connect();
         await this.mqtt.setup();
-        //##this.deviceConfigurator.setup();
-        //##subscribeTopic({
-        //##  topic: `${this.config.homeassistantBaseTopic}/#`,
-        //##  opts: null,
-        //##});
+        this.deviceConfigurator.setup();
+        subscribeTopic({
+          topic: `${this.config.homebridgeConfigTopic}/#`,
+          opts: null,
+        });
       } catch (e : unknown) {
         log.error(JSON.stringify(e));
       }

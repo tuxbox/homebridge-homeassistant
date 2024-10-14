@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "HombridgePluginHomeassistant",
+  "pluginAlias": "HomebridgePluginHomeassistant",
   "pluginType": "platform",
   "singular": true,
   "schema": {
