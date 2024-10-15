@@ -97,30 +97,26 @@ export class DeviceConfigurator {
     //clean up
     //after 15s we presume all configurations received and all registered accessories that have not yet been configured to be obsolete
     setTimeout(() => {
-      //##const configuratorTypes = Array.from(this.configurators.keys());
-      //##const obsoleteAccessories = this.cachedAccessories.filter(
-      //##  // eslint-disable-next-line eqeqeq
-      //##  (accessory) => this.configuredAccessories.find((uuid) => uuid === accessory.UUID) == null ||
-      //##                 configuratorTypes.find((key) => key === accessory.context?.device_type) == null,
-      //##);
-      //##this.log.info(`Found ${obsoleteAccessories.length} obsolete accessories`);
-      //##
-      //##const unsubscriptions = obsoleteAccessories.map((e) => {
-      //##  const result : string[] = [];
-      //##  if( e.context?.configuration?.command_topic ) {
-      //##    result.push(e.context.configuration.command_topic);
-      //##  }
-      //##  if( e.context?.configuration?.state_topic ) {
-      //##    result.push(e.context.configuration.state_topic);
-      //##  }
-      //##  return result;
-      //##}).reduce((prev, cur) => prev.concat(cur), []);
-      //##unsubscribeTopics({
-      //##  topics: unsubscriptions,
-      //##});
-      //##this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, obsoleteAccessories);
-      //##// eslint-disable-next-line eqeqeq
-      //##this.cachedAccessories = this.cachedAccessories.filter((item) => obsoleteAccessories.find((x) => x.UUID == item.UUID) == null);
+      this.log.info(`${this.configuredAccessories.length} configured accessories`);
+      this.log.info(`${this.cachedAccessories.length} cached accessories`);
+      const obsoleteAccessories = this.cachedAccessories.filter(
+        // eslint-disable-next-line eqeqeq
+        (accessory) => this.configuredAccessories.find((uuid) => uuid === accessory.UUID) === null,
+      );
+      this.log.info(`Found ${obsoleteAccessories.length} obsolete accessories`);
+      const unsubscriptions = obsoleteAccessories.map((e) => {
+        const result : string[] = [];
+        if( e.context?.state_topic ) {
+          result.push(e.context.configuration.state_topic);
+        }
+        return result;
+      }).reduce((prev, cur) => prev.concat(cur), []);
+      unsubscribeTopics({
+        topics: unsubscriptions,
+      });
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, obsoleteAccessories);
+      // eslint-disable-next-line eqeqeq
+      this.cachedAccessories = this.cachedAccessories.filter((item) => obsoleteAccessories.find((x) => x.UUID == item.UUID) == null);
     }, 15_000);
   }
 

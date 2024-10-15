@@ -31,7 +31,11 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
 
   override updateCharacteristic(value: number) {
     //##this.platform.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value}`);
-    this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, value);
+    if (value === undefined || !(typeof value === 'number')) {
+      this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
+    } else {
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, value);
+    }
   }
 
   protected override initialValue(): number {

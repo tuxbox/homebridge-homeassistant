@@ -46,6 +46,7 @@ export abstract class BaseSensorPlatformAccessory<StateType> {
       //##const value = this.renderValue(payload);
       //##this.currentState = this.convertStatePayloadToStateValue(value);
       const data : SensorPayload<StateType> = JSON.parse(payload.payload);
+      this.log.debug(`[DEBUG] - ${payload.topic} - ${JSON.stringify(data)}`);
       this.currentState = data.value;
       this.updateCharacteristic(this.currentState);
     }).bind(this));

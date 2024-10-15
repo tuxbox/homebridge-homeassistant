@@ -4,6 +4,7 @@ import MQTT from 'async-mqtt';
 import { EventEmitter, Events } from './eventChannel';
 //import { MqttPublishEvent } from '../model/mqtt/mqttPublishEvent';
 import { MqttSubscribeEvent } from '../model/mqtt/mqttSubscribeEvent';
+import { MqttUnsubscribeEvent } from '../model/mqtt/mqttUnsubscribeEvent';
 import { subscribeTopic } from './mqttHelpers';
 //import { MqttUnsubscribeEvent } from '../model/mqtt/mqttUnsubscribeEvent';
 
@@ -105,10 +106,10 @@ export class MQTTPlatform {
     //  this.log.debug(JSON.stringify(event));
     //  await this.publish(event.topic, event.payload);
     //}).bind(this));
-    //EventEmitter.on(Events.MqttUnsubscribe, (async (event: MqttUnsubscribeEvent) => {
-    //  this.log.debug('Received MqttUnsubscribe Event');
-    //  await this.unsubscribe(event.topics);
-    //}).bind(this));
+    EventEmitter.on(Events.MqttUnsubscribe, (async (event: MqttUnsubscribeEvent) => {
+      this.log.debug('Received MqttUnsubscribe Event');
+      await this.unsubscribe(event.topics);
+    }).bind(this));
   }
 
   private async subscribe(topic : string) {
