@@ -3,6 +3,15 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 import { MQTTPlatform } from './util/mqttPlatform';
 import { DeviceConfigurator } from './util/deviceConfigurator';
 import { subscribeTopic } from './util/mqttHelpers';
+import {
+  TotalEnergyCharacteristic,
+  PowerCharacteristic,
+  CurrentCharacteristic,
+  VoltageCharacteristic,
+} from './homekit/electricityCharacteristics';
+
+let ITotalEnergy;
+let ICurrentPower;
 
 /**
  * HomebridgePlatform
@@ -12,7 +21,7 @@ import { subscribeTopic } from './util/mqttHelpers';
 export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
 
   public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public Characteristic: typeof Characteristic & typeof ITotalEnergy & typeof ICurrentPower;
   private readonly mqtt : MQTTPlatform;
   private readonly deviceConfigurator : DeviceConfigurator;
 
@@ -23,8 +32,11 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
     this.mqtt = new MQTTPlatform(config, log);
-
     this.deviceConfigurator = new DeviceConfigurator(api, this);
+
+    ITotalEnergy = TotalEnergyCharacteristic;
+    ICurrentPower = PowerCharacteristic;
+
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -47,6 +59,11 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
         log.error(JSON.stringify(e));
       }
     });
+
+    let x = Object.defineProperty(this.api.hap.Characteristic, 'TotalEnergy', {value: TotalEnergyCharacteristic});
+    x = Object.defineProperty(this.api.hap.Characteristic, 'Voltage', {value: VoltageCharacteristic});
+    x = Object.defineProperty(this.api.hap.Characteristic, 'Current', {value: CurrentCharacteristic});
+    this.Characteristic = Object.defineProperty(x, 'CurrentPower', {value: PowerCharacteristic});
   }
 
   /**

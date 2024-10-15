@@ -7,6 +7,10 @@ import { SensorConfiguration } from '../model/configuration/sensorConfiguration'
 import { AccessoryConfigurationEvent } from '../model/events/accessoryConfigurationEvent';
 import { TemperatureSensorPlatformAccessory } from '../accessories/sensors/temperatureSensorAccessory';
 import { HumiditySensorPlatformAccessory } from '../accessories/sensors/humiditySensorAccessory';
+import { EnergySensorPlatformAccessory } from '../accessories/sensors/energySensorAccessory';
+import { VoltageSensorPlatformAccessory } from '../accessories/sensors/voltageSensorAccessory';
+import { PowerSensorPlatformAccessory } from '../accessories/sensors/powerSensorAccessory';
+import { CurrentSensorPlatformAccessory } from '../accessories/sensors/currentSensorAccessory';
 
 export class DeviceConfigurator {
 
@@ -45,6 +49,18 @@ export class DeviceConfigurator {
         } else if (sensorConfiguration.type === 'humidity') {
           this.log.info('configure humidity accessory');
           new HumiditySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+        } else if (sensorConfiguration.type === 'energy') {
+          this.log.info('configure energy sensor');
+          new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+        } else if (sensorConfiguration.type === 'power') {
+          this.log.info('configure voltage sensor');
+          new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+        } else if (sensorConfiguration.type === 'voltage') {
+          this.log.info('configure voltage sensor');
+          new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+        } else if (sensorConfiguration.type === 'current') {
+          this.log.info('configure voltage sensor');
+          new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
         } else {
           this.log.info('no platform accessory configured');
           this.log.info(JSON.stringify(sensorConfiguration));
