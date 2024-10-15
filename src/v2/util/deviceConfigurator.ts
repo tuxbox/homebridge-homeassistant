@@ -53,13 +53,13 @@ export class DeviceConfigurator {
           this.log.info('configure energy sensor');
           new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
         } else if (sensorConfiguration.type === 'power') {
-          this.log.info('configure voltage sensor');
+          this.log.info('configure power sensor');
           new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
         } else if (sensorConfiguration.type === 'voltage') {
           this.log.info('configure voltage sensor');
           new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
         } else if (sensorConfiguration.type === 'current') {
-          this.log.info('configure voltage sensor');
+          this.log.info('configure current sensor');
           new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
         } else {
           this.log.info('no platform accessory configured');
