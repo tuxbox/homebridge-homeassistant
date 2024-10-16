@@ -13,6 +13,7 @@ import { VoltageSensorPlatformAccessory } from '../accessories/sensors/voltageSe
 import { PowerSensorPlatformAccessory } from '../accessories/sensors/powerSensorAccessory';
 import { CurrentSensorPlatformAccessory } from '../accessories/sensors/currentSensorAccessory';
 import { AccessoryContext } from '../model/accessoryContext';
+import { BaseSensorPlatformAccessory } from '../accessories/sensors/baseSensorAccessory';
 
 export class DeviceConfigurator {
 
@@ -32,69 +33,54 @@ export class DeviceConfigurator {
       this.log.info(`Configuring a sensor of type ${payload.payload.type}`);
       const sensorConfiguration : SensorConfiguration = payload.payload;
       const uuid = this.api.hap.uuid.generate(sensorConfiguration.id);
+      const configuredAccessory = this.configuredAccessories.find((configuredUUID) => configuredUUID === uuid);
       let usedAccessory = this.cachedAccessories.find((accessory) => accessory.UUID === uuid);
-      if (usedAccessory === undefined) {
-        this.log.info('Configuring new accessory');
-        usedAccessory = new this.api.platformAccessory(sensorConfiguration.name, uuid);
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
-      } else {
-        this.log.info('using existing accessory');
-      }
-      if( usedAccessory ) {
-        usedAccessory.context = {
-          configuration: sensorConfiguration,
-        };
-        this.configureSensorAccessory(usedAccessory as PlatformAccessory<SensorConfiguration>);
-        this.log.info(JSON.stringify(sensorConfiguration));
-        if (sensorConfiguration.type === 'temperature') {
-          this.log.info('configure temperature accessory');
-          new TemperatureSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
-        } else if (sensorConfiguration.type === 'humidity') {
-          this.log.info('configure humidity accessory');
-          new HumiditySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
-        } else if (sensorConfiguration.type === 'energy') {
-          this.log.info('configure energy sensor');
-          new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
-        } else if (sensorConfiguration.type === 'power') {
-          this.log.info('configure power sensor');
-          new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
-        } else if (sensorConfiguration.type === 'voltage') {
-          this.log.info('configure voltage sensor');
-          new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
-        } else if (sensorConfiguration.type === 'current') {
-          this.log.info('configure current sensor');
-          new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+      if (configuredAccessory === undefined) {
+        this.log.info(`No accessory with UUID ${uuid} configured - setting up new one`);
+        if (usedAccessory === undefined) {
+          this.log.info('Configuring new accessory');
+          usedAccessory = new this.api.platformAccessory(sensorConfiguration.name, uuid);
+          usedAccessory.context = {
+            configuration: sensorConfiguration,
+          };
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
         } else {
-          this.log.info('no platform accessory configured');
-          this.log.info(JSON.stringify(sensorConfiguration));
+          this.log.info('using existing accessory');
         }
-        this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
+        if( usedAccessory ) {
+          let sensor : BaseSensorPlatformAccessory<any> | undefined = undefined;
+          this.log.info(JSON.stringify(sensorConfiguration));
+          if (sensorConfiguration.type === 'temperature') {
+            this.log.info('configure temperature accessory');
+            sensor = new TemperatureSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else if (sensorConfiguration.type === 'humidity') {
+            this.log.info('configure humidity accessory');
+            sensor = new HumiditySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else if (sensorConfiguration.type === 'energy') {
+            this.log.info('configure energy sensor');
+            sensor = new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else if (sensorConfiguration.type === 'power') {
+            this.log.info('configure power sensor');
+            sensor = new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else if (sensorConfiguration.type === 'voltage') {
+            this.log.info('configure voltage sensor');
+            sensor = new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else if (sensorConfiguration.type === 'current') {
+            this.log.info('configure current sensor');
+            sensor = new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          } else {
+            this.log.info('no platform accessory configured');
+            this.log.info(JSON.stringify(sensorConfiguration));
+          }
+          sensor?.configureSensor();
+          this.configureSensorAccessory(usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
+          this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
+        } else {
+          this.log.info(`häää? ${usedAccessory}`);
+        }
       } else {
-        this.log.info(`häää? ${usedAccessory}`);
+        this.log.info(`accessory with ${uuid} already configured - skipping`);
       }
-      //##if( configurator ) {
-      //##  const configuration = payload.payload;
-      //##  const uuid = this.api.hap.uuid.generate(configuration.unique_id);
-      //##  let usedAccessory = this.cachedAccessories.find((accessory) => accessory.UUID === uuid);
-      //##  if( usedAccessory == null ) {
-      //##    if( payload.deviceType !== 'sensor' || (payload.deviceType === 'sensor' && payload.payload.device_class === 'battery')) {
-      //##      this.log.info(`No accessory found with UUID ${uuid}`);
-      //##      this.log.info('Creating a new accessory');
-      //##      usedAccessory = new this.api.platformAccessory(configuration.name, uuid);
-      //##      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
-      //##    }
-      //##  } else {
-      //##    this.log.info('configuring existing accessory');
-      //##  }
-      //##  if( usedAccessory ) {
-      //##    usedAccessory.context.configuration = configuration;
-      //##    this.configureAccessory(usedAccessory);
-      //##    configurator.configure(usedAccessory);
-      //##    this.registerCurrentlyConfiguredAccessory(usedAccessory.UUID);
-      //##  }
-      //##} else {
-      //##  this.log.info(`accessory type ${payload.deviceType} not yet supported`);
-      //##}
 
     }).bind(this));
     //clean up
@@ -125,11 +111,11 @@ export class DeviceConfigurator {
     }, 15_000);
   }
 
-  configureSensorAccessory(accessory: PlatformAccessory<SensorConfiguration>) {
+  configureSensorAccessory(accessory: PlatformAccessory<AccessoryContext<number, SensorConfiguration>>) {
     this.log.debug(`configuring accessory ${accessory.displayName}`);
-    if( accessory.context.state_topic ) {
+    if( accessory.context.configuration.state_topic ) {
       subscribeTopic({
-        topic: accessory.context.state_topic,
+        topic: accessory.context.configuration.state_topic,
         opts: null,
       });
     }
@@ -139,11 +125,15 @@ export class DeviceConfigurator {
         opts: null,
       });
     }*/
-    this.cachedAccessories.push(accessory);
   }
 
   registerCurrentlyConfiguredAccessory(uuid : string) {
     this.configuredAccessories.push(uuid);
+  }
+
+  configureAccessory(accessory: PlatformAccessory) {
+    this.log.info(`Tracking accessory as cached and restored ${accessory.UUID}`);
+    this.cachedAccessories.push(accessory);
   }
 
 }

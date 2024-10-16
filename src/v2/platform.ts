@@ -1,4 +1,4 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, APIEvent } from 'homebridge';
 
 import { MQTTPlatform } from './util/mqttPlatform';
 import { DeviceConfigurator } from './util/deviceConfigurator';
@@ -9,6 +9,7 @@ import {
   CurrentCharacteristic,
   VoltageCharacteristic,
 } from './homekit/electricityCharacteristics';
+import { EventEmitter } from './util/eventChannel';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -34,6 +35,8 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
     this.mqtt = new MQTTPlatform(config, log);
     this.deviceConfigurator = new DeviceConfigurator(api, this);
 
+    EventEmitter.setMaxListeners(150);
+
     ITotalEnergy = TotalEnergyCharacteristic;
     ICurrentPower = PowerCharacteristic;
 
@@ -42,7 +45,7 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', async () => {
+    this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       //this.discoverDevices();
@@ -72,7 +75,7 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
-    //##this.deviceConfigurator.configureAccessory(accessory);
+    this.deviceConfigurator.configureAccessory(accessory);
   }
 
 }

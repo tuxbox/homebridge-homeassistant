@@ -1,4 +1,4 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { API, PlatformAccessory, Service } from 'homebridge';
 import { HomebridgeMqttPlatform } from '../../platform';
 import { BaseSensorPlatformAccessory } from './baseSensorAccessory';
 import { SensorConfiguration } from '../../model/configuration/sensorConfiguration';
@@ -26,6 +26,7 @@ export class CurrentSensorPlatformAccessory extends BaseSensorPlatformAccessory<
   }
 
   override configureSensor() {
+    super.configureSensor();
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.getCharacteristic(this.platform.Characteristic.Current)

@@ -24,6 +24,7 @@ export class MQTTPlatform {
     this.client = await MQTT.connectAsync(`${this.configuration.protocol}://${this.configuration.host}:${this.configuration.port}`, {
       username: this.configuration.username,
       password: this.configuration.password,
+      keepalive: 10,
     }, true);
     // eslint-disable-next-line max-len
     this.log.info(`connected to ${this.configuration.protocol}://${this.configuration.username}@${this.configuration.host}:${this.configuration.port}`);
@@ -31,6 +32,18 @@ export class MQTTPlatform {
 
   async setup() {
     this.log.info('registering MQTT message handler');
+    this.client?.on('connect', () => {
+      this.log.info('Connected to MQTT Broker');
+    });
+    this.client?.on('reconnect', () => {
+      this.log.info('Reconnecting to MQTT Broker');
+    });
+    this.client?.on('close', () => {
+      this.log.info('Closing MQTT connection');
+    });
+    this.client?.on('disconnect', () => {
+      this.log.info('Disconnecting from MQTT Broker');
+    });
     this.client?.on('message', async (topic, payload) => {
       if( topic !== null ) {
         if( topic === this.configuration.homebridgeConfigTopic ) {

@@ -10,3 +10,14 @@ export type SensorPayload<T> = {
   value: T;
   uom: string;
 };
+
+export type ActorStatePayload = {
+  source: string;
+  type: string;
+  published_at: string;
+  value: string;
+};
+
+export type ActorCommandPayload = {
+
+};

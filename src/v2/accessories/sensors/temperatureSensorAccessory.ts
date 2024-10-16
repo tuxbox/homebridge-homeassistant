@@ -13,7 +13,7 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
 
   constructor(
     protected readonly platform: HomebridgeMqttPlatform,
-    protected readonly accessory: PlatformAccessory<AccessoryContext<number, SensorConfiguration>>,
+    protected accessory: PlatformAccessory<AccessoryContext<number, SensorConfiguration>>,
   ) {
     super(platform, accessory);
   }
@@ -24,6 +24,7 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
   }
 
   override configureSensor() {
+    super.configureSensor();
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
