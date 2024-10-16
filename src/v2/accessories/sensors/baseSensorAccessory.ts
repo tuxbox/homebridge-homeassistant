@@ -4,6 +4,7 @@ import { SensorConfiguration } from '../../model/configuration/sensorConfigurati
 import { Payload, SensorPayload } from '../../model/mqtt/mqtt-payload';
 import { EventEmitter, Events } from '../../util/eventChannel';
 import nunjucks from 'nunjucks';
+import { AccessoryContext } from '../../model/accessoryContext';
 
 /**
  * Platform Accessory
@@ -18,13 +19,12 @@ export abstract class BaseSensorPlatformAccessory<StateType> {
 
   protected currentState : StateType;
 
-
   constructor(
     protected readonly platform: HomebridgeMqttPlatform,
-    protected readonly accessory: PlatformAccessory<SensorConfiguration>,
+    protected readonly accessory: PlatformAccessory<AccessoryContext<StateType, SensorConfiguration>>,
   ) {
     this.log = platform.log;
-    this.configuration = accessory.context;
+    this.configuration = accessory.context.configuration;
     this.currentState = this.initialValue();
     //##this.template = nunjucks.compile(this.configuration.value_template || '{{ value }}');
     // set accessory information
@@ -40,15 +40,20 @@ export abstract class BaseSensorPlatformAccessory<StateType> {
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.configuration.name);
     this.configureSensor();
 
-    this.log.info(`Receiving Events on ${Events.MqttMessageReceived}:${accessory.context.state_topic}`);
-    EventEmitter.on(`${Events.MqttMessageReceived}:${accessory.context.state_topic}`, ((payload : Payload) => {
+    this.log.info(`Receiving Events on ${Events.MqttMessageReceived}:${this.configuration.state_topic}`);
+    EventEmitter.on(`${Events.MqttMessageReceived}:${this.configuration.state_topic}`, ((payload : Payload) => {
       this.log.debug(`Handling MQTT state update for accessory ${this.accessory.displayName}`);
       //##const value = this.renderValue(payload);
       //##this.currentState = this.convertStatePayloadToStateValue(value);
       const data : SensorPayload<StateType> = JSON.parse(payload.payload);
       this.log.debug(`[DEBUG] - ${payload.topic} - ${JSON.stringify(data)}`);
-      this.currentState = data.value;
-      this.updateCharacteristic(this.currentState);
+      if (this.currentState === data.value) {
+        this.log.debug(`Skipping update, incoming message has no update - current value: ${this.currentState} - new value: ${data.value}`);
+      } else {
+        this.currentState = data.value;
+        this.accessory.context.__persisted_state = this.currentState;
+        this.updateCharacteristic(this.currentState);
+      }
     }).bind(this));
 
   }

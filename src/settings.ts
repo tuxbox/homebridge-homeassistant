@@ -1,9 +1,9 @@
 /**
  * This is the name of the platform that users will use to register the plugin in the Homebridge config.json
  */
-export const PLATFORM_NAME = 'HombridgePluginHomeassistant';
+export const PLATFORM_NAME = 'HomebridgePluginMQTT';
 
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = '@tuxbox/homebridge-homeassistant';
+export const PLUGIN_NAME = '@tuxbox/homebridge-mqtt';

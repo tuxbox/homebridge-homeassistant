@@ -19,7 +19,8 @@ export class MQTTPlatform {
   }
 
   async connect() {
-    this.log.info(`Connecting to ${this.configuration.host}`);
+    this.log.info(`Connecting to ${this.configuration.host} - no keepalive`);
+    this.log.info(JSON.stringify(this.configuration));
     this.client = await MQTT.connectAsync(`${this.configuration.protocol}://${this.configuration.host}:${this.configuration.port}`, {
       username: this.configuration.username,
       password: this.configuration.password,
@@ -37,8 +38,8 @@ export class MQTTPlatform {
           const strPayload = payload.toString('utf-8');
           this.log.debug(`PAYLOAD: ${strPayload}`);
           const baseConfiguration = JSON.parse(strPayload);
-          this.log.info(`Subscribing to sensors_topic_prefix '${baseConfiguration.sensors_topic_prefix}/#`);
-          /*await subscribeTopic({
+          /*this.log.info(`Subscribing to sensors_topic_prefix '${baseConfiguration.sensors_topic_prefix}/#`);
+          await subscribeTopic({
             'topic': `${baseConfiguration.sensors_topic_prefix}/#`,
             'opts': null,
           });*/

@@ -2,6 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { HomebridgeMqttPlatform } from '../../platform';
 import { BaseSensorPlatformAccessory } from './baseSensorAccessory';
 import { SensorConfiguration } from '../../model/configuration/sensorConfiguration';
+import { AccessoryContext } from '../../model/accessoryContext';
 
 /**
  * Platform Accessory
@@ -12,7 +13,7 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
 
   constructor(
     protected readonly platform: HomebridgeMqttPlatform,
-    protected readonly accessory: PlatformAccessory<SensorConfiguration>,
+    protected readonly accessory: PlatformAccessory<AccessoryContext<number, SensorConfiguration>>,
   ) {
     super(platform, accessory);
   }
@@ -30,7 +31,7 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
   }
 
   override updateCharacteristic(value: number) {
-    //##this.platform.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value}`);
+    this.platform.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
     if (value === undefined || !(typeof value === 'number')) {
       this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
     } else {
@@ -39,7 +40,7 @@ export class TemperatureSensorPlatformAccessory extends BaseSensorPlatformAccess
   }
 
   protected override initialValue(): number {
-    return 0.0;
+    return this.accessory.context.__persisted_state || 0.0;
   }
 
 }

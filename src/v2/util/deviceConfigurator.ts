@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { API, Logger, PlatformAccessory } from 'homebridge';
 import { EventEmitter, Events } from './eventChannel';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
@@ -11,6 +12,7 @@ import { EnergySensorPlatformAccessory } from '../accessories/sensors/energySens
 import { VoltageSensorPlatformAccessory } from '../accessories/sensors/voltageSensorAccessory';
 import { PowerSensorPlatformAccessory } from '../accessories/sensors/powerSensorAccessory';
 import { CurrentSensorPlatformAccessory } from '../accessories/sensors/currentSensorAccessory';
+import { AccessoryContext } from '../model/accessoryContext';
 
 export class DeviceConfigurator {
 
@@ -35,32 +37,33 @@ export class DeviceConfigurator {
         this.log.info('Configuring new accessory');
         usedAccessory = new this.api.platformAccessory(sensorConfiguration.name, uuid);
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [usedAccessory]);
-        this.cachedAccessories.push(usedAccessory);
       } else {
         this.log.info('using existing accessory');
       }
       if( usedAccessory ) {
-        usedAccessory.context = sensorConfiguration;
+        usedAccessory.context = {
+          configuration: sensorConfiguration,
+        };
         this.configureSensorAccessory(usedAccessory as PlatformAccessory<SensorConfiguration>);
         this.log.info(JSON.stringify(sensorConfiguration));
         if (sensorConfiguration.type === 'temperature') {
           this.log.info('configure temperature accessory');
-          new TemperatureSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new TemperatureSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else if (sensorConfiguration.type === 'humidity') {
           this.log.info('configure humidity accessory');
-          new HumiditySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new HumiditySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else if (sensorConfiguration.type === 'energy') {
           this.log.info('configure energy sensor');
-          new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new EnergySensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else if (sensorConfiguration.type === 'power') {
           this.log.info('configure power sensor');
-          new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new PowerSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else if (sensorConfiguration.type === 'voltage') {
           this.log.info('configure voltage sensor');
-          new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new VoltageSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else if (sensorConfiguration.type === 'current') {
           this.log.info('configure current sensor');
-          new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<SensorConfiguration>);
+          new CurrentSensorPlatformAccessory(this.platform, usedAccessory as PlatformAccessory<AccessoryContext<number, SensorConfiguration>>);
         } else {
           this.log.info('no platform accessory configured');
           this.log.info(JSON.stringify(sensorConfiguration));
@@ -111,12 +114,14 @@ export class DeviceConfigurator {
         }
         return result;
       }).reduce((prev, cur) => prev.concat(cur), []);
-      unsubscribeTopics({
-        topics: unsubscriptions,
-      });
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, obsoleteAccessories);
-      // eslint-disable-next-line eqeqeq
-      this.cachedAccessories = this.cachedAccessories.filter((item) => obsoleteAccessories.find((x) => x.UUID == item.UUID) == null);
+      if (unsubscriptions.length > 0) {
+        unsubscribeTopics({
+          topics: unsubscriptions,
+        });
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, obsoleteAccessories);
+        // eslint-disable-next-line eqeqeq
+        this.cachedAccessories = this.cachedAccessories.filter((item) => obsoleteAccessories.find((x) => x.UUID == item.UUID) == null);
+      }
     }, 15_000);
   }
 

@@ -3,6 +3,7 @@ import { HomebridgeMqttPlatform } from '../../platform';
 import { BaseSensorPlatformAccessory } from './baseSensorAccessory';
 import { SensorConfiguration } from '../../model/configuration/sensorConfiguration';
 import { EveElgatoService } from '../../homekit/eveElgatoService';
+import { AccessoryContext } from '../../model/accessoryContext';
 
 /**
  * Platform Accessory
@@ -13,7 +14,7 @@ export class VoltageSensorPlatformAccessory extends BaseSensorPlatformAccessory<
 
   constructor(
     protected readonly platform: HomebridgeMqttPlatform,
-    protected readonly accessory: PlatformAccessory<SensorConfiguration>,
+    protected readonly accessory: PlatformAccessory<AccessoryContext<number, SensorConfiguration>>,
   ) {
     super(platform, accessory);
   }
@@ -37,7 +38,7 @@ export class VoltageSensorPlatformAccessory extends BaseSensorPlatformAccessory<
   }
 
   protected override initialValue(): number {
-    return 0.0;
+    return this.accessory.context.__persisted_state || 0.0;
   }
 
 }
