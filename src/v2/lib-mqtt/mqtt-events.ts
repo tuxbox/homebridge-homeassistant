@@ -50,4 +50,5 @@ export type MqttConfiguration = {
   password: string;
   keepalive: number | undefined;
   clean_session: boolean | undefined;
+  configuration_topic: string | undefined;
 };

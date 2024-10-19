@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory } from 'homebridge';
+import { API, Logger, PlatformAccessory } from 'homebridge';
 import { EventEmitter, Events } from './events/event-channel';
 import { AccessoryConfiguration } from './accessory-configuration';
 import { AccessoryConfiguredEvent, AccessoryRegistrationEvent } from './events/accessory-configuration-event';

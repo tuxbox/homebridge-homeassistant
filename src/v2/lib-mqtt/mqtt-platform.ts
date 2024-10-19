@@ -25,6 +25,7 @@ export class MQTTPlatform {
    *
    */
   async configure() {
+    this.log.info('Configuring MQTTPlatform');
     EventEmitter.on(MqttEvents.ConfigureMQTT, async (payload: MqttConfiguration) => {
       this.log.debug(`MQTT Configuration - ${JSON.stringify(payload)}`);
       this.log.info(`Configure and connect to MQTT broker ${payload.host} with user ${payload.username}`);
@@ -36,6 +37,7 @@ export class MQTTPlatform {
           clean: payload.clean_session || false,
           clientId : payload.client_id || uuid(),
         }, true);
+        this.log.debug(`MQTT Client: ${this.client.connected}`);
         EventEmitter.on(MqttEvents.SubscribeTopic, (async (event : MqttSubscription) => {
           this.log.debug('Received MqttSubscribe Event');
           try {
@@ -80,7 +82,7 @@ export class MQTTPlatform {
             if( topic.startsWith(`${this.configuration.homebridgeConfigTopic}/devices`) ) {
               this.log.info(`Received device configuration on topic ${topic}`);
               const json = JSON.parse(payload.toString('utf-8'));
-              EventEmitter.emit(Events.ConfigureAccessory, {
+              EventEmitter.emit(Events.RegisterAccessory, {
                 topic,
                 payload: json,
               });
@@ -96,6 +98,10 @@ export class MQTTPlatform {
             this.log.warn('Received a message but topic was not set');
           }
         });
+        this.log.debug(`Subscribing to topic ${payload.configuration_topic}`);
+        EventEmitter.emit(MqttEvents.SubscribeTopic, {
+          'topic': payload.configuration_topic,
+        } as MqttSubscription);
       } catch(e) {
         EventEmitter.emit(MqttEvents.MqttError, {
           'payload': e,

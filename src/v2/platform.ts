@@ -4,6 +4,9 @@ import { MQTTPlatform } from './lib-mqtt/mqtt-platform';
 import { AccessoryManager } from './lib/accessory-manager';
 import { AccessoryManagerPlatform } from './lib/platform';
 import { subscribeTopic } from './lib-mqtt/mqtt-utils';
+import { EventEmitter } from './lib/events/event-channel';
+import { Events } from './lib/events/event-channel';
+import { MqttConfiguration, MqttEvents } from './lib-mqtt/mqtt-events';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -34,10 +37,9 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
     this.log.info(`Configuration: ${JSON.stringify(this.config)}`);
     try {
       await this.mqtt.configure();
-      subscribeTopic({
-        topic: `${this.config.homebridgeConfigTopic}/#`,
-        qos: 0,
-        retain: false,
+      EventEmitter.emit(MqttEvents.ConfigureMQTT, {
+        ...this.config,
+        configuration_topic: `${this.config.homebridgeConfigTopic}/#`,
       });
     } catch (e : unknown) {
       this.log.error(JSON.stringify(e));
@@ -46,6 +48,10 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
 
   override setup() {
     super.setup();
+    EventEmitter.on(Events.ConfigureAccessory, async (payload) => {
+      this.log.debug('Configure Accessory for platform');
+      this.log.debug(JSON.stringify(payload));
+    });
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;
     //let x = Object.defineProperty(this.api.hap.Characteristic, 'TotalEnergy', {value: TotalEnergyCharacteristic});

@@ -2,6 +2,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { EventEmitter } from './events/event-channel';
 import { AccessoryManager } from './accessory-manager';
+import { PLUGIN_NAME } from '../../settings';
 
 export abstract class AccessoryManagerPlatform implements DynamicPlatformPlugin {
 
@@ -12,15 +13,19 @@ export abstract class AccessoryManagerPlatform implements DynamicPlatformPlugin 
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    this.log.debug('Finished initializing platform:', this.config.name);
+    this.log.debug(JSON.stringify(config));
+    this.log.debug(`Finished initializing platform: ${this.config.platform}`);
     this.accessoryManager = new AccessoryManager(api, log);
     EventEmitter.setMaxListeners(150);
     this.setup();
-    this.api.on(APIEvent.DID_FINISH_LAUNCHING, this.onDidFinishLaunching);
+    this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => {
+      await this.onDidFinishLaunching();
+    });
   }
 
   protected async onDidFinishLaunching() {
     this.log.debug('Called onDidFinishLaunching()');
+    this.accessoryManager.setup(this.config.platform, PLUGIN_NAME);
   }
 
   protected setup() {
