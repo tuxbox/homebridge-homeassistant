@@ -50,7 +50,9 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
     super.setup();
     EventEmitter.on(Events.ConfigureAccessory, async (payload) => {
       this.log.debug('Configure Accessory for platform');
-      this.log.debug(JSON.stringify(payload));
+      this.log.debug(`Payload: ${JSON.stringify(payload.payload)}`);
+      this.log.debug(`Accessory Type: ${payload.accessory_type}`);
+      this.log.debug(`Accessory: ${payload.accessory}`);
     });
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;
