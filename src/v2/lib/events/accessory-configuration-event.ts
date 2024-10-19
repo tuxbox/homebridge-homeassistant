@@ -16,7 +16,7 @@ export type AccessoryConfigurationEvent<T extends AccessoryConfiguration> = {
 
 };
 
-export type AccessoryConfiguredEvent<T extends AccessoryConfiguration> = {
+export type AccessoryConfiguredEvent = {
 
   accessory_type: string;
   accessory_id: string;
@@ -24,7 +24,9 @@ export type AccessoryConfiguredEvent<T extends AccessoryConfiguration> = {
 };
 
 export type AccessoryObsoleteEvent<T extends AccessoryConfiguration> = {
+
   id: string;
   accessory_type: string;
   configuration: T;
+
 };

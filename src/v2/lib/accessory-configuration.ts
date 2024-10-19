@@ -5,4 +5,5 @@ export type AccessoryConfiguration = {
   model: string;
   manufacturer: string;
   last_changed: string;
+  type: string;
 };

@@ -1,12 +1,12 @@
 import { API, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { MQTTPlatform } from './lib-mqtt/mqtt-platform';
-import { AccessoryManager } from './lib/accessory-manager';
 import { AccessoryManagerPlatform } from './lib/platform';
-import { subscribeTopic } from './lib-mqtt/mqtt-utils';
 import { EventEmitter } from './lib/events/event-channel';
 import { Events } from './lib/events/event-channel';
-import { MqttConfiguration, MqttEvents } from './lib-mqtt/mqtt-events';
+import { MqttEvents } from './lib-mqtt/mqtt-events';
+import { AccessoryConfiguration } from './lib/accessory-configuration';
+import { AccessoryRegistration } from './lib/accessory-registration';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -21,6 +21,8 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
   public readonly Service: typeof Service = this.api.hap.Service;
   public Characteristic: typeof Characteristic & typeof ITotalEnergy & typeof ICurrentPower;
   private readonly mqtt : MQTTPlatform;
+  private readonly accessoryRegistration : AccessoryRegistration<HomebridgeMqttPlatform>;
+  private subscriptions = {};
 
   constructor(
     public readonly log: Logger,
@@ -29,6 +31,8 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
   ) {
     super(log, config, api);
     this.mqtt = new MQTTPlatform(config, log);
+    this.accessoryRegistration = new AccessoryRegistration(this, log);
+    this.accessoryRegistration.setup();
   }
 
   protected override async onDidFinishLaunching(): Promise<void> {
@@ -48,11 +52,34 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
 
   override setup() {
     super.setup();
+    EventEmitter.on(Events.AccessoryConfigured, (async (payload) => {
+      this.log.debug('Accessory configured');
+      this.log.debug(JSON.stringify(payload));
+    }).bind(this));
     EventEmitter.on(Events.ConfigureAccessory, async (payload) => {
       this.log.debug('Configure Accessory for platform');
       this.log.debug(`Payload: ${JSON.stringify(payload.payload)}`);
       this.log.debug(`Accessory Type: ${payload.accessory_type}`);
       this.log.debug(`Accessory: ${payload.accessory}`);
+      const { accessory } = payload;
+      if( payload.accessory_type === 'sensor' ) {
+        const configuration = payload.payload;
+        const topic = configuration['state_topic'];
+        EventEmitter.on(`${MqttEvents.MessageReceived}:${topic}`, (async (payload) => {
+          this.log.debug(`Received message on topic ${topic}`);
+          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
+        }).bind(this));
+        this.subscriptions[topic] = accessory.UUID;
+        EventEmitter.emit(MqttEvents.SubscribeTopic, {
+          topic,
+        });
+        EventEmitter.emit(Events.AccessoryConfigured, {
+          'accessory_type': 'sensor',
+          'accessory_id': accessory.UUID,
+        });
+      } else {
+        this.log.debug(`unsupported accessory_type: ${payload.accessory_type}`);
+      }
     });
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;

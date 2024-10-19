@@ -4,6 +4,8 @@ import { BasePlatformAccessory } from '../../base-accessory';
 import { AccessoryConfiguration } from '../../accessory-configuration';
 import { AccessoryContext } from '../../accessory-context';
 
+export const UPDATE_TEMPERATURE_SENSOR = 'accessory:update:temperature';
+
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -17,11 +19,7 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
     protected readonly accessory: PlatformAccessory<AccessoryContext<number, T>>,
     private readonly logger : Logger,
   ) {
-    super(platform, accessory);
-  }
-
-  protected override createLogger(): Logger {
-    return this.logger;
+    super(platform, accessory, logger);
   }
 
   override createService() : Service {

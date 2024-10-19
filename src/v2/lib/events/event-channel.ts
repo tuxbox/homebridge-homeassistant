@@ -7,4 +7,5 @@ export const Events= {
   'UnregisterAccessory': 'unregister:accessory',
   'ObsoleteAccessory': 'obsolete:accessory',
   'AccessoryConfigured': 'configured:accessory',
+  'UpdateAccessoryState': 'state:accessory:update',
 };

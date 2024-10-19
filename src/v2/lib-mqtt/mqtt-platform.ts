@@ -82,10 +82,18 @@ export class MQTTPlatform {
             if( topic.startsWith(`${this.configuration.homebridgeConfigTopic}/devices`) ) {
               this.log.info(`Received device configuration on topic ${topic}`);
               const json = JSON.parse(payload.toString('utf-8'));
-              EventEmitter.emit(Events.RegisterAccessory, {
+              const eventPayload = {
                 topic,
                 payload: json,
-              });
+              };
+              if(topic.indexOf('/sensors/') > -1) {
+                eventPayload['accessory_type'] = 'sensor';
+              } else if (topic.indexOf('/locks/') > -1) {
+                eventPayload['accessory_type'] = 'lock';
+              } else {
+                eventPayload['accessory_type'] = 'unknown';
+              }
+              EventEmitter.emit(Events.RegisterAccessory, eventPayload);
             } else {
               this.log.info(`Received event message in ${topic}`);
               this.log.debug(`Payload: ${payload.toString()}`);

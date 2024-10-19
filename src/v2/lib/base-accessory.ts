@@ -2,6 +2,8 @@ import { Service, PlatformAccessory, Logger, DynamicPlatformPlugin } from 'homeb
 import { Service as HAPService, Characteristic } from 'hap-nodejs';
 import { AccessoryConfiguration } from './accessory-configuration';
 import { AccessoryContext } from './accessory-context';
+import { EventEmitter, Events } from './events/event-channel';
+import { AccessoryState } from './accessory-state';
 
 /**
  * Platform Accessory
@@ -13,7 +15,6 @@ export abstract class BasePlatformAccessory<
   Configuration extends AccessoryConfiguration,
   Platform extends DynamicPlatformPlugin> {
 
-  protected readonly log : Logger;
   protected readonly configuration: Configuration;
   protected service: Service;
   protected currentState : StateType;
@@ -21,8 +22,8 @@ export abstract class BasePlatformAccessory<
   constructor(
     protected readonly platform: Platform,
     protected accessory: PlatformAccessory<AccessoryContext<StateType, Configuration>>,
+    protected readonly log: Logger,
   ) {
-    this.log = this.createLogger();
     this.configuration = accessory.context.configuration;
     this.service = this.createService();
     this.currentState = this.initialValue();
@@ -32,9 +33,8 @@ export abstract class BasePlatformAccessory<
 
   protected abstract createService() : Service;
 
-  protected abstract createLogger() : Logger;
-
   public configureAccessory() {
+    this.log.debug('configureAccessory');
     this.preconfigureAccessory();
     this.log.debug(JSON.stringify(this.configuration));
     this.accessory.getService(HAPService.AccessoryInformation)!
@@ -45,12 +45,16 @@ export abstract class BasePlatformAccessory<
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.setCharacteristic(Characteristic.Name, this.configuration.name);
+    EventEmitter.on(`${Events.UpdateAccessoryState}:${this.accessory.UUID}`, (async (payload : AccessoryState<StateType>) => {
+      this.log.debug('UpdateAccessoryState Event handled');
+      const stuff = payload.value;
+      this.updateCharacteristic(stuff);
+    }).bind(this));
     this.postconfigureAccessory();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected preconfigureAccessory() {
-
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function

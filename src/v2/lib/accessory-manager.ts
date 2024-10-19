@@ -15,7 +15,7 @@ export class AccessoryManager {
   }
 
   setup(platformName: string, pluginName: string) {
-    EventEmitter.on(Events.AccessoryConfigured, (payload: AccessoryConfiguredEvent<AccessoryConfiguration>) => {
+    EventEmitter.on(Events.AccessoryConfigured, (payload: AccessoryConfiguredEvent) => {
       this.registerCurrentlyConfiguredAccessory(payload.accessory_id);
     });
     EventEmitter.on(Events.RegisterAccessory, ((payload : AccessoryRegistrationEvent<AccessoryConfiguration>) => {

@@ -17,11 +17,7 @@ export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P
     protected readonly accessory: PlatformAccessory<AccessoryContext<number, T>>,
     private readonly logger : Logger,
   ) {
-    super(platform, accessory);
-  }
-
-  protected override createLogger(): Logger {
-    return this.logger;
+    super(platform, accessory, logger);
   }
 
   override createService() : Service {
