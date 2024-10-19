@@ -1,6 +1,6 @@
 {
   "private": false,
-  "displayName": "tuxbox's homebridge mqtt",
+  "displayName": "homebridge mqtt",
   "name": "@tuxbox/homebridge-mqtt",
   "version": "2.0.1-beta.0",
   "description": "A short description about what your plugin does.",
@@ -32,7 +32,8 @@
   "dependencies": {
     "async-mqtt": "^2.6.3",
     "homebridge-config-ui-x": "^4.61.0",
-    "nunjucks": "^3.2.4"
+    "nunjucks": "^3.2.4",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.18.38",

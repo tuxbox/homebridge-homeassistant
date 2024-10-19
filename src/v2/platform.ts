@@ -1,15 +1,9 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, APIEvent } from 'homebridge';
+import { API, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { MQTTPlatform } from './util/mqttPlatform';
-import { DeviceConfigurator } from './util/deviceConfigurator';
-import { subscribeTopic } from './util/mqttHelpers';
-import {
-  TotalEnergyCharacteristic,
-  PowerCharacteristic,
-  CurrentCharacteristic,
-  VoltageCharacteristic,
-} from './homekit/electricityCharacteristics';
-import { EventEmitter } from './util/eventChannel';
+import { MQTTPlatform } from './lib-mqtt/mqtt-platform';
+import { AccessoryManager } from './lib/accessory-manager';
+import { AccessoryManagerPlatform } from './lib/platform';
+import { subscribeTopic } from './lib-mqtt/mqtt-utils';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -19,54 +13,45 @@ let ICurrentPower;
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
+export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
 
   public readonly Service: typeof Service = this.api.hap.Service;
   public Characteristic: typeof Characteristic & typeof ITotalEnergy & typeof ICurrentPower;
   private readonly mqtt : MQTTPlatform;
-  private readonly deviceConfigurator : DeviceConfigurator;
 
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    this.log.debug('Finished initializing platform:', this.config.name);
+    super(log, config, api);
     this.mqtt = new MQTTPlatform(config, log);
-    this.deviceConfigurator = new DeviceConfigurator(api, this);
+  }
 
-    EventEmitter.setMaxListeners(150);
+  protected override async onDidFinishLaunching(): Promise<void> {
+    await super.onDidFinishLaunching();
+    this.log.debug('Executed didFinishLaunching callback');
+    this.log.info(`Configuration: ${JSON.stringify(this.config)}`);
+    try {
+      await this.mqtt.configure();
+      subscribeTopic({
+        topic: `${this.config.homebridgeConfigTopic}/#`,
+        qos: 0,
+        retain: false,
+      });
+    } catch (e : unknown) {
+      this.log.error(JSON.stringify(e));
+    }
+  }
 
-    ITotalEnergy = TotalEnergyCharacteristic;
-    ICurrentPower = PowerCharacteristic;
-
-
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => {
-      log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      //this.discoverDevices();
-      log.info(`Configuration: ${JSON.stringify(this.config)}`);
-      try {
-        await this.mqtt.connect();
-        await this.mqtt.setup();
-        this.deviceConfigurator.setup();
-        subscribeTopic({
-          topic: `${this.config.homebridgeConfigTopic}/#`,
-          opts: null,
-        });
-      } catch (e : unknown) {
-        log.error(JSON.stringify(e));
-      }
-    });
-
-    let x = Object.defineProperty(this.api.hap.Characteristic, 'TotalEnergy', {value: TotalEnergyCharacteristic});
-    x = Object.defineProperty(this.api.hap.Characteristic, 'Voltage', {value: VoltageCharacteristic});
-    x = Object.defineProperty(this.api.hap.Characteristic, 'Current', {value: CurrentCharacteristic});
-    this.Characteristic = Object.defineProperty(x, 'CurrentPower', {value: PowerCharacteristic});
+  override setup() {
+    super.setup();
+    //ITotalEnergy = TotalEnergyCharacteristic;
+    //ICurrentPower = PowerCharacteristic;
+    //let x = Object.defineProperty(this.api.hap.Characteristic, 'TotalEnergy', {value: TotalEnergyCharacteristic});
+    //x = Object.defineProperty(this.api.hap.Characteristic, 'Voltage', {value: VoltageCharacteristic});
+    //x = Object.defineProperty(this.api.hap.Characteristic, 'Current', {value: CurrentCharacteristic});
+    //this.Characteristic = Object.defineProperty(x, 'CurrentPower', {value: PowerCharacteristic});
   }
 
   /**
@@ -75,7 +60,7 @@ export class HomebridgeMqttPlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
-    this.deviceConfigurator.configureAccessory(accessory);
+    this.accessoryManager.configureAccessory(accessory);
   }
 
 }

@@ -19,5 +19,8 @@ export type ActorStatePayload = {
 };
 
 export type ActorCommandPayload = {
-
+  source: string;
+  type: string;
+  published_at: string;
+  value: string;
 };
