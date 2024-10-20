@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory, Logger, DynamicPlatformPlugin } from 'homebridge';
+import { Service, PlatformAccessory, Logger, DynamicPlatformPlugin, API } from 'homebridge';
 import { Service as HAPService, Characteristic } from 'hap-nodejs';
 import { AccessoryConfiguration } from './accessory-configuration';
 import { AccessoryContext } from './accessory-context';
@@ -21,6 +21,7 @@ export abstract class BasePlatformAccessory<
 
   constructor(
     protected readonly platform: Platform,
+    protected readonly api: API,
     protected accessory: PlatformAccessory<AccessoryContext<StateType, Configuration>>,
     protected readonly log: Logger,
   ) {

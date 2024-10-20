@@ -5,7 +5,6 @@ import { AccessoryManagerPlatform } from './lib/platform';
 import { EventEmitter } from './lib/events/event-channel';
 import { Events } from './lib/events/event-channel';
 import { MqttEvents } from './lib-mqtt/mqtt-events';
-import { AccessoryConfiguration } from './lib/accessory-configuration';
 import { AccessoryRegistration } from './lib/accessory-registration';
 
 let ITotalEnergy;
@@ -31,7 +30,7 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
   ) {
     super(log, config, api);
     this.mqtt = new MQTTPlatform(config, log);
-    this.accessoryRegistration = new AccessoryRegistration(this, log);
+    this.accessoryRegistration = new AccessoryRegistration(this, this.api, log);
     this.accessoryRegistration.setup();
   }
 

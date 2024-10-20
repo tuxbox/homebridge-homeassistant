@@ -30,6 +30,7 @@ export class AccessoryManager {
           this.log.info('Configuring new accessory');
           usedAccessory = new this.api.platformAccessory(accessoryConfiguration.name, uuid);
           usedAccessory.context = {
+            accessory_type: payload.accessory_type,
             configuration: accessoryConfiguration,
           };
           this.api.registerPlatformAccessories(pluginName, platformName, [usedAccessory]);
@@ -57,7 +58,11 @@ export class AccessoryManager {
       this.log.info(`${this.cachedAccessories.length} cached accessories`);
       const obsoleteAccessories = this.cachedAccessories.filter(
         // eslint-disable-next-line eqeqeq
-        (accessory) => this.configuredAccessories.find((uuid) => uuid === accessory.UUID) === null,
+        (accessory) => {
+          console.log(`UUID Compare ${accessory.UUID} - ${JSON.stringify(this.configuredAccessories)}`);
+          const result = this.configuredAccessories.find((uuid) => uuid === accessory.UUID) === null;
+          return result;
+        },
       );
       this.log.info(`Found ${obsoleteAccessories.length} obsolete accessories`);
       obsoleteAccessories.forEach((accessory) => EventEmitter.emit(Events.ObsoleteAccessory, {

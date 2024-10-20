@@ -1,4 +1,4 @@
-import { DynamicPlatformPlugin, Logger, PlatformAccessory } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory } from 'homebridge';
 import { AccessoryConfiguration } from './accessory-configuration';
 import { AccessoryContext } from './accessory-context';
 import { EventEmitter, Events } from './events/event-channel';
@@ -11,6 +11,7 @@ export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
 
   constructor(
     protected readonly platform: Platform,
+    protected readonly api: API,
     private readonly logger : Logger,
   ) {
   }
@@ -23,10 +24,10 @@ export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
         this.logger.debug('XXXX - Handle ConfigureAccessory');
         if( payload.payload.type === 'temperature') {
           const accessory = payload.accessory as PlatformAccessory<AccessoryContext<number, AccessoryConfiguration>>;
-          instance = new TemperatureSensorPlatformAccessory(this.platform, accessory, this.logger);
+          instance = new TemperatureSensorPlatformAccessory(this.platform, this.api, accessory, this.logger);
         } else if( payload.payload.type === 'humidity') {
           const accessory = payload.accessory as PlatformAccessory<AccessoryContext<number, AccessoryConfiguration>>;
-          instance = new HumiditySensorPlatformAccessory(this.platform, accessory, this.logger);
+          instance = new HumiditySensorPlatformAccessory(this.platform, this.api, accessory, this.logger);
         } else {
           this.logger.debug(`Unknown sensor type '${payload.payload.type}'`);
         }

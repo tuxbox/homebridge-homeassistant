@@ -1,5 +1,5 @@
 import { Service as HAPService, Characteristic as HAPCharacteristic } from 'hap-nodejs';
-import { DynamicPlatformPlugin, Logger, PlatformAccessory, Service } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, Service } from 'homebridge';
 import { BasePlatformAccessory } from '../../base-accessory';
 import { AccessoryConfiguration } from '../../accessory-configuration';
 import { AccessoryContext } from '../../accessory-context';
@@ -16,10 +16,11 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
 
   constructor(
     protected readonly platform: P,
+    protected readonly api: API,
     protected readonly accessory: PlatformAccessory<AccessoryContext<number, T>>,
     private readonly logger : Logger,
   ) {
-    super(platform, accessory, logger);
+    super(platform, api, accessory, logger);
   }
 
   override createService() : Service {
@@ -34,11 +35,13 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
   }
 
   override updateCharacteristic(value: number) {
-    this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
     if (value === undefined || !(typeof value === 'number')) {
       this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
     } else {
-      this.service.updateCharacteristic(HAPCharacteristic.CurrentRelativeHumidity, value);
+      this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
+      this.service.updateCharacteristic(HAPCharacteristic.CurrentTemperature, value);
+      this.accessory.context.__persisted_state = value;
+      this.api.updatePlatformAccessories([this.accessory]);
     }
   }
 
