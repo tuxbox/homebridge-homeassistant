@@ -94,6 +94,7 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.log.debug(JSON.stringify(accessory.context));
     this.accessoryManager.configureAccessory(accessory);
   }
 

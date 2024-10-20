@@ -41,6 +41,7 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
       this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
       this.service.updateCharacteristic(HAPCharacteristic.CurrentTemperature, value);
       this.accessory.context.__persisted_state = value;
+      this.currentState = value;
       this.api.updatePlatformAccessories([this.accessory]);
     }
   }

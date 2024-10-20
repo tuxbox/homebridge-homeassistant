@@ -39,6 +39,7 @@ export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P
     } else {
       this.service.updateCharacteristic(HAPCharacteristic.CurrentRelativeHumidity, value);
       this.accessory.context.__persisted_state = value;
+      this.currentState = value;
       this.api.updatePlatformAccessories([this.accessory]);
     }
   }
