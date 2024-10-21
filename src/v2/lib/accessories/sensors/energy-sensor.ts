@@ -1,15 +1,17 @@
-import { Service as HAPService, Characteristic as HAPCharacteristic, CharacteristicValue } from 'hap-nodejs';
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { Service as HAPService, Characteristic as HAPCharacteristic } from 'hap-nodejs';
+import { API, CharacteristicValue, DynamicPlatformPlugin, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { AccessoryConfiguration } from '../../accessory-configuration';
 import { AccessoryContext } from '../../accessory-context';
 import { BasePlatformAccessory } from '../base-accessory';
+
+export const UPDATE_TEMPERATURE_SENSOR = 'accessory:update:temperature';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P extends DynamicPlatformPlugin>
+export class EnergySensorPlatformAccessory<T extends AccessoryConfiguration, P extends DynamicPlatformPlugin>
   extends BasePlatformAccessory<T, P> {
 
   constructor(
@@ -20,6 +22,7 @@ export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P
   ) {
     super(platform, api, accessory, logger);
   }
+
 
   override createService() : Service {
     return this.accessory.getService(HAPService.HumiditySensor) ||
@@ -35,7 +38,7 @@ export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P
   }
 
   protected stateCharacteristic(): WithUUID<new () => HAPCharacteristic> {
-    return HAPCharacteristic.CurrentRelativeHumidity;
+    return HAPCharacteristic.CurrentTemperature;
   }
 
 }

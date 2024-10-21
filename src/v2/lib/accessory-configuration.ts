@@ -7,3 +7,7 @@ export type AccessoryConfiguration = {
   last_changed: string;
   type: string;
 };
+
+export type LockConfiguration = AccessoryConfiguration & {
+
+};

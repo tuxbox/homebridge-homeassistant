@@ -1,8 +1,8 @@
-import { Service as HAPService, Characteristic as HAPCharacteristic } from 'hap-nodejs';
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, Service } from 'homebridge';
-import { BasePlatformAccessory } from '../../base-accessory';
+import { Service as HAPService, Characteristic as HAPCharacteristic, CharacteristicValue } from 'hap-nodejs';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, Service, Characteristic, WithUUID } from 'homebridge';
 import { AccessoryConfiguration } from '../../accessory-configuration';
 import { AccessoryContext } from '../../accessory-context';
+import { BasePlatformAccessory } from '../base-accessory';
 
 export const UPDATE_TEMPERATURE_SENSOR = 'accessory:update:temperature';
 
@@ -12,13 +12,13 @@ export const UPDATE_TEMPERATURE_SENSOR = 'accessory:update:temperature';
  * Each accessory may expose multiple services of different service types.
  */
 export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration, P extends DynamicPlatformPlugin>
-  extends BasePlatformAccessory<number, T, P> {
+  extends BasePlatformAccessory<T, P> {
 
   constructor(
     protected readonly platform: P,
     protected readonly api: API,
-    protected readonly accessory: PlatformAccessory<AccessoryContext<number, T>>,
-    private readonly logger : Logger,
+    protected readonly accessory: PlatformAccessory<AccessoryContext<T>>,
+    protected readonly logger : Logger,
   ) {
     super(platform, api, accessory, logger);
   }
@@ -28,26 +28,16 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
             this.accessory.addService(HAPService.TemperatureSensor);
   }
 
-  override configureAccessory() {
-    super.configureAccessory();
-    this.service.getCharacteristic(HAPCharacteristic.CurrentTemperature)
-      .onGet(this.handleHomekitCurrentStateGet.bind(this));
+  protected initialValue(): CharacteristicValue {
+    return this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] || 0.0;
   }
 
-  override updateCharacteristic(value: number) {
-    if (value === undefined || !(typeof value === 'number')) {
-      this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
-    } else {
-      this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
-      this.service.updateCharacteristic(HAPCharacteristic.CurrentTemperature, value);
-      this.accessory.context.__persisted_state = value;
-      this.currentState = value;
-      this.api.updatePlatformAccessories([this.accessory]);
-    }
+  protected stateValueType(): string {
+    return 'number';
   }
 
-  protected override initialValue(): number {
-    return this.accessory.context.__persisted_state || 0.0;
+  protected stateCharacteristic(): WithUUID<new () => HAPCharacteristic> {
+    return HAPCharacteristic.CurrentTemperature;
   }
 
 }

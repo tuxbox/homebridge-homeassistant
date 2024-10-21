@@ -1,6 +1,8 @@
-export type AccessoryState<T> = {
+import { CharacteristicValue } from 'homebridge';
 
-  value : T;
+export type AccessoryState = {
+
+  value : CharacteristicValue;
   uom: string;
   published_at: string;
 

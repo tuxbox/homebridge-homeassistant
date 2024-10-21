@@ -8,4 +8,5 @@ export const Events= {
   'ObsoleteAccessory': 'obsolete:accessory',
   'AccessoryConfigured': 'configured:accessory',
   'UpdateAccessoryState': 'state:accessory:update',
+  'UpdateAccessoryTargetState': 'state:accessory:target:update',
 };

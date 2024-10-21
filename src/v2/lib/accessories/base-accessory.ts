@@ -1,9 +1,9 @@
-import { Service, PlatformAccessory, Logger, DynamicPlatformPlugin, API } from 'homebridge';
-import { Service as HAPService, Characteristic } from 'hap-nodejs';
-import { AccessoryConfiguration } from './accessory-configuration';
-import { AccessoryContext } from './accessory-context';
-import { EventEmitter, Events } from './events/event-channel';
-import { AccessoryState } from './accessory-state';
+import { CharacteristicValue, Characteristic as HAPCharacteristic, Service as HAPService } from 'hap-nodejs';
+import { Service, PlatformAccessory, Logger, DynamicPlatformPlugin, API, WithUUID } from 'homebridge';
+import { AccessoryConfiguration } from '../accessory-configuration';
+import { AccessoryContext } from '../accessory-context';
+import { EventEmitter, Events } from '../events/event-channel';
+import { AccessoryState } from '../accessory-state';
 
 /**
  * Platform Accessory
@@ -11,18 +11,17 @@ import { AccessoryState } from './accessory-state';
  * Each accessory may expose multiple services of different service types.
  */
 export abstract class BasePlatformAccessory<
-  StateType,
   Configuration extends AccessoryConfiguration,
   Platform extends DynamicPlatformPlugin> {
 
   protected readonly configuration: Configuration;
   protected service: Service;
-  protected currentState : StateType;
+  protected currentState : CharacteristicValue;
 
   constructor(
     protected readonly platform: Platform,
     protected readonly api: API,
-    protected accessory: PlatformAccessory<AccessoryContext<StateType, Configuration>>,
+    protected accessory: PlatformAccessory<AccessoryContext<Configuration>>,
     protected readonly log: Logger,
   ) {
     this.configuration = accessory.context.configuration;
@@ -30,26 +29,33 @@ export abstract class BasePlatformAccessory<
     this.currentState = this.initialValue();
   }
 
-  protected abstract initialValue() : StateType;
+  protected abstract initialValue() : CharacteristicValue;
 
   protected abstract createService() : Service;
+
+  protected abstract stateValueType() : string;
+
+  protected abstract stateCharacteristic() : WithUUID<new () => HAPCharacteristic>;
 
   public configureAccessory() {
     this.log.debug('configureAccessory');
     this.preconfigureAccessory();
     this.log.debug(JSON.stringify(this.configuration));
+    const model = (this.configuration.model === undefined || this.configuration.model.length < 2) ? undefined : this.configuration.model;
     this.accessory.getService(HAPService.AccessoryInformation)!
-      .setCharacteristic(Characteristic.Manufacturer, this.configuration.manufacturer || 'Homebridge')
-      .setCharacteristic(Characteristic.Model, this.configuration.model || 'Homebridge Accessory')
+      .setCharacteristic(HAPCharacteristic.Manufacturer, this.configuration.manufacturer || 'Homebridge')
+      .setCharacteristic(HAPCharacteristic.Model, model || 'Homebridge Accessory')
       // eslint-disable-next-line max-len
-      .setCharacteristic(Characteristic.SerialNumber, this.configuration.serial_number || 'dcbac663-04b2-42ae-ae03-3afd23037f93');
+      .setCharacteristic(HAPCharacteristic.SerialNumber, this.configuration.serial_number || 'dcbac663-04b2-42ae-ae03-3afd23037f93');
+    this.service.getCharacteristic(this.stateCharacteristic())
+      .onGet(this.handleHomekitCurrentStateGet.bind(this));
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(Characteristic.Name, this.configuration.name);
-    EventEmitter.on(`${Events.UpdateAccessoryState}:${this.accessory.UUID}`, (async (payload : AccessoryState<StateType>) => {
+    this.service.setCharacteristic(HAPCharacteristic.Name, this.configuration.name);
+    EventEmitter.on(`${Events.UpdateAccessoryState}:${this.accessory.UUID}`, (async (payload : AccessoryState) => {
       this.log.debug('UpdateAccessoryState Event handled');
       const stuff = payload.value;
-      this.updateCharacteristic(stuff);
+      this.updateCharacteristic(this.stateCharacteristic(), stuff);
     }).bind(this));
     this.postconfigureAccessory();
   }
@@ -60,7 +66,8 @@ export abstract class BasePlatformAccessory<
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected postconfigureAccessory() {
-    this.updateCharacteristic(this.currentState);
+    this.log.debug(`postconfigureAccessory - ${this.currentState}`);
+    this.updateCharacteristic(this.stateCharacteristic(), this.currentState);
   }
 
   public reconfigureAccessory(configuration: Configuration) {
@@ -79,26 +86,33 @@ export abstract class BasePlatformAccessory<
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   protected preReconfigureAccessory(_updated: boolean) {
-
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected doReconfigureAccessory(updated: boolean, configuration: Configuration) {
     if(updated) {
       this.accessory.context.configuration = configuration;
-      this.service.setCharacteristic(Characteristic.Name, this.configuration.name);
+      this.service.setCharacteristic(HAPCharacteristic.Name, this.configuration.name);
     }
   }
 
-
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   protected postReconfigureAccessory(_updated: boolean) {
-
   }
 
-  protected abstract updateCharacteristic(value: StateType);
+  protected updateCharacteristic(characteristic: WithUUID<new () => HAPCharacteristic>, value: CharacteristicValue) {
+    if (value === undefined || !(typeof value === this.stateValueType())) {
+      this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
+    } else {
+      this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
+      this.service.updateCharacteristic(characteristic.UUID, value);
+      this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] = value;
+      this.currentState = value;
+      this.api.updatePlatformAccessories([this.accessory]);
+    }
+  }
 
-  async handleHomekitCurrentStateGet() : Promise<StateType> {
+  async handleHomekitCurrentStateGet() : Promise<CharacteristicValue> {
     return this.currentState!;
   }
 
