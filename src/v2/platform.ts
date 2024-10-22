@@ -1,12 +1,11 @@
 import { API, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
-
+import { Characteristic as HAPCharacteristic } from 'hap-nodejs';
 import { MQTTPlatform } from './lib-mqtt/mqtt-platform';
 import { AccessoryManagerPlatform } from './lib/platform';
 import { EventEmitter } from './lib/events/event-channel';
 import { Events } from './lib/events/event-channel';
 import { MqttEvents, MqttMessage } from './lib-mqtt/mqtt-events';
 import { AccessoryRegistration } from './lib/accessory-registration';
-import { AccessoryState } from './lib/accessory-state';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -23,6 +22,7 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
   private readonly mqtt : MQTTPlatform;
   private readonly accessoryRegistration : AccessoryRegistration<HomebridgeMqttPlatform>;
   private subscriptions = {};
+  private stateDeDuplication = {};
 
   constructor(
     public readonly log: Logger,
@@ -82,10 +82,20 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
         const configuration = payload.payload;
         const state_topic = configuration['state_topic'];
         EventEmitter.on(`${MqttEvents.MessageReceived}:${state_topic}`, (async (payload) => {
-          if (configuration['sync_state_to_target_state'] === true) {
-            EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, JSON.parse(payload.payload));
+          this.log.debug(`Handle lock state message on topic '${state_topic}'`);
+          const content = JSON.parse(payload.payload);
+          if( this.stateDeDuplication[state_topic] === undefined) {
+            this.stateDeDuplication[state_topic] = {};
           }
-          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
+          if( this.stateDeDuplication[state_topic] === content.value) {
+            this.log.debug(`DeDuplicating state on topic '${state_topic}'`);
+          } else {
+            this.stateDeDuplication[state_topic] = content.value;
+            if (configuration['sync_state_to_target_state'] === true) {
+              EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, content);
+            }
+            EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, content);
+          }
         }).bind(this));
         this.subscriptions[state_topic] = accessory.UUID;
         EventEmitter.emit(MqttEvents.SubscribeTopic, {
@@ -102,11 +112,26 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
     EventEmitter.on(Events.PublishAccessoryTargetState, async (payload) => {
       this.log.debug(`consuming 'PublishAccessoryTargetState' - ${JSON.stringify(payload)}`);
       const configuration = payload.configuration;
+      const content = payload.payload;
+      content.readable_value = content.value === HAPCharacteristic.LockTargetState.UNSECURED ? 'unsecured' : 'secured';
       EventEmitter.emit(MqttEvents.PublishMessage, {
         topic: configuration['target_state_topic'],
-        payload: JSON.stringify(payload.payload),
+        payload: JSON.stringify(content),
         opts: {},
       } as MqttMessage);
+      const auto_lock_delay = configuration['auto_lock_delay'] || 3000;
+      if(payload.payload.value === HAPCharacteristic.LockTargetState.UNSECURED ) {
+        this.log.debug(`Unlocking lock - scheduling auto lock - ${auto_lock_delay}`);
+        setTimeout(() => {
+          this.log.debug('fireing auto lock event');
+          const message = {
+            ...payload,
+          };
+          message.payload.value = HAPCharacteristic.LockTargetState.SECURED;
+          message.payload.readable_value = 'secured';
+          EventEmitter.emit(Events.PublishAccessoryTargetState, message);
+        }, auto_lock_delay);
+      }
     });
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;
