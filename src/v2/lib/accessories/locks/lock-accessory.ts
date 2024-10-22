@@ -15,9 +15,6 @@ export class LockPlatformAccessory<
   T extends AccessoryConfiguration,
   P extends DynamicPlatformPlugin>
   extends ActorPlatformAccessory<T, P> {
-  protected initialTargetValue(): HAPCharacteristicValue {
-    throw new Error('Method not implemented.');
-  }
 
   constructor(
     protected readonly platform: P,
@@ -34,15 +31,17 @@ export class LockPlatformAccessory<
   }
 
   protected override initialValue(): CharacteristicValue {
+    this.accessory.context.__persisted_state = this.accessory.context.__persisted_state || {};
     return this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] || HAPCharacteristic.LockCurrentState.UNKNOWN;
+  }
+
+  protected override initialTargetValue(): CharacteristicValue {
+    this.accessory.context.__persisted_state = this.accessory.context.__persisted_state || {};
+    return this.accessory.context.__persisted_state[this.targetStateCharacteristic().UUID] || HAPCharacteristic.LockTargetState.SECURED;
   }
 
   protected targetStateCharacteristic(): WithUUID<new () => HAPCharacteristic> {
     return HAPCharacteristic.LockTargetState;
-  }
-
-  protected stateValueType(): string {
-    throw 'number';
   }
 
   protected stateCharacteristic(): WithUUID<new () => HAPCharacteristic> {

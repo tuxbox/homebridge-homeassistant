@@ -1,3 +1,5 @@
+import { IClientOptions } from 'async-mqtt';
+
 /**
  *
  */
@@ -36,6 +38,7 @@ export type MqttCancelSubscription = {
  */
 export type MqttMessage = MqttBaseMessage & {
   payload : string;
+  opts: IClientOptions;
 };
 
 /**

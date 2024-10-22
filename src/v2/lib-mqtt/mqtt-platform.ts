@@ -1,4 +1,4 @@
-import { AsyncMqttClient, connectAsync } from 'async-mqtt';
+import { AsyncMqttClient, connectAsync, IClientOptions } from 'async-mqtt';
 import { Logger, PlatformConfig } from 'homebridge';
 import { v4 as uuid } from 'uuid';
 
@@ -51,7 +51,7 @@ export class MQTTPlatform {
         EventEmitter.on(MqttEvents.PublishMessage, (async (event : MqttMessage) => {
           this.log.debug('Received MqttPublish Event');
           this.log.debug(JSON.stringify(event));
-          await this.publish(event.topic, event.payload);
+          await this.publish(event.topic, event.payload, event.opts);
         }).bind(this));
         EventEmitter.on(MqttEvents.UnsubscribeTopic, (async (event: MqttCancelSubscription) => {
           this.log.debug('Received MqttUnsubscribe Event');
@@ -156,10 +156,10 @@ export class MQTTPlatform {
    * @param topic
    * @param payload
    */
-  private async publish(topic: string, payload: string) {
+  private async publish(topic: string, payload: string, opts: IClientOptions) {
     this.log.debug(`Publish data to topic ${topic}`);
     this.log.debug(`payload: ${payload?.toString()}`);
-    await this.client?.publish(topic, payload);
+    await this.client?.publish(topic, payload, opts);
   }
 
 }

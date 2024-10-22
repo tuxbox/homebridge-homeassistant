@@ -1,4 +1,3 @@
-import { CharacteristicValue as HAPCharacteristicValue } from 'hap-nodejs';
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory } from 'homebridge';
 import { AccessoryConfiguration } from './accessory-configuration';
 import { AccessoryContext, ActorContext } from './accessory-context';
@@ -44,7 +43,7 @@ export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
       try {
         instance?.configureAccessory();
       } catch(e) {
-        this.logger.error('Configuration error!');
+        this.logger.error(`Configuration error! ${e}`);
       }
     }).bind(this));
   }

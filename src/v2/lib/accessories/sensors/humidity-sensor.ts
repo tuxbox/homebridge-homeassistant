@@ -27,6 +27,7 @@ export class HumiditySensorPlatformAccessory<T extends AccessoryConfiguration, P
   }
 
   protected initialValue(): CharacteristicValue {
+    this.accessory.context.__persisted_state = this.accessory.context.__persisted_state || {};
     return this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] || 0.0;
   }
 

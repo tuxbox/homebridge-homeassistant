@@ -4,8 +4,9 @@ import { MQTTPlatform } from './lib-mqtt/mqtt-platform';
 import { AccessoryManagerPlatform } from './lib/platform';
 import { EventEmitter } from './lib/events/event-channel';
 import { Events } from './lib/events/event-channel';
-import { MqttEvents } from './lib-mqtt/mqtt-events';
+import { MqttEvents, MqttMessage } from './lib-mqtt/mqtt-events';
 import { AccessoryRegistration } from './lib/accessory-registration';
+import { AccessoryState } from './lib/accessory-state';
 
 let ITotalEnergy;
 let ICurrentPower;
@@ -64,6 +65,7 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
       if( payload.accessory_type === 'sensor' ) {
         const configuration = payload.payload;
         const topic = configuration['state_topic'];
+        // TODO strongly type the payload
         EventEmitter.on(`${MqttEvents.MessageReceived}:${topic}`, (async (payload) => {
           this.log.debug(`Received message on topic ${topic}`);
           EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
@@ -76,9 +78,39 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
           'accessory_type': 'sensor',
           'accessory_id': accessory.UUID,
         });
+      } else if (payload.accessory_type === 'lock' ) {
+        const configuration = payload.payload;
+        const state_topic = configuration['state_topic'];
+        //const target_state_topic = configuration['target_state_topic'];
+        EventEmitter.on(`${MqttEvents.MessageReceived}:${state_topic}`, (async (payload) => {
+          if (configuration['sync_state_to_target_state'] === true) {
+            EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, JSON.parse(payload.payload));
+          }
+          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
+        }).bind(this));
+        this.subscriptions[state_topic] = accessory.UUID;
+        EventEmitter.emit(MqttEvents.SubscribeTopic, {
+          'topic': state_topic,
+        });
+        //EventEmitter.on(`${MqttEvents.MessageReceived}:${target_state_topic}`, (async (payload) => {
+        //  EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, JSON.parse(payload.payload));
+        //}));
+        EventEmitter.emit(Events.AccessoryConfigured, {
+          'accessory_type': 'lock',
+          'accessory_id': accessory.UUID,
+        });
       } else {
         this.log.debug(`unsupported accessory_type: ${payload.accessory_type}`);
       }
+    });
+    EventEmitter.on(Events.PublishAccessoryTargetState, async (payload) => {
+      this.log.debug(`consuming 'PublishAccessoryTargetState' - ${JSON.stringify(payload)}`);
+      const configuration = payload.configuration;
+      EventEmitter.emit(MqttEvents.PublishMessage, {
+        topic: configuration['target_state_topic'],
+        payload: JSON.stringify(payload.payload),
+        opts: {},
+      } as MqttMessage);
     });
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;

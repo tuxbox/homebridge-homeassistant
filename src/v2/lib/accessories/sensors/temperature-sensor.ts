@@ -29,6 +29,7 @@ export class TemperatureSensorPlatformAccessory<T extends AccessoryConfiguration
   }
 
   protected initialValue(): CharacteristicValue {
+    this.accessory.context.__persisted_state = this.accessory.context.__persisted_state || {};
     return this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] || 0.0;
   }
 

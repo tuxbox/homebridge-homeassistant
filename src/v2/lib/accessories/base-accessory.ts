@@ -33,7 +33,9 @@ export abstract class BasePlatformAccessory<
 
   protected abstract createService() : Service;
 
-  protected abstract stateValueType() : string;
+  protected stateValueType() : string {
+    return 'number';
+  }
 
   protected abstract stateCharacteristic() : WithUUID<new () => HAPCharacteristic>;
 
@@ -100,14 +102,14 @@ export abstract class BasePlatformAccessory<
   protected postReconfigureAccessory(_updated: boolean) {
   }
 
-  protected updateCharacteristic(characteristic: WithUUID<new () => HAPCharacteristic>, value: CharacteristicValue) {
+  protected updateCharacteristic(characteristic: WithUUID<new () => HAPCharacteristic>, value: CharacteristicValue, propertyName = 'currentState') {
     if (value === undefined || !(typeof value === this.stateValueType())) {
       this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
     } else {
       this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
-      this.service.updateCharacteristic(characteristic.UUID, value);
+      this.service.updateCharacteristic(characteristic, value);
       this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] = value;
-      this.currentState = value;
+      this[propertyName] = value;
       this.api.updatePlatformAccessories([this.accessory]);
     }
   }

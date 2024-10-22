@@ -1,5 +1,5 @@
 import { Characteristic as HAPCharacteristic, CharacteristicValue } from 'hap-nodejs';
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, WithUUID } from 'homebridge';
 import { BasePlatformAccessory } from './base-accessory';
 import { AccessoryConfiguration } from '../accessory-configuration';
 import { ActorContext } from '../accessory-context';
@@ -18,7 +18,7 @@ export abstract class ActorPlatformAccessory<
   P extends DynamicPlatformPlugin>
   extends BasePlatformAccessory<T, P> {
 
-  protected targetState : CharacteristicValue | undefined;
+  protected targetState : CharacteristicValue;
 
   constructor(
     protected readonly platform: P,
@@ -27,6 +27,7 @@ export abstract class ActorPlatformAccessory<
     protected readonly logger : Logger,
   ) {
     super(platform, api, accessory, logger);
+    this.targetState = this.initialTargetValue();
   }
 
   protected abstract initialTargetValue() : CharacteristicValue;
@@ -40,6 +41,12 @@ export abstract class ActorPlatformAccessory<
   async handleHomekitTargetStateSet(value : CharacteristicValue) : Promise<void> {
     this.log.debug(`handleHomekitTargetStateSet - ${value} - ${typeof value}`);
     this.targetState = value;
+    EventEmitter.emit(Events.PublishAccessoryTargetState, {
+      configuration: this.accessory.context.configuration,
+      payload: {
+        value,
+      },
+    });
   }
 
   protected postconfigureAccessory() {
@@ -51,9 +58,10 @@ export abstract class ActorPlatformAccessory<
       (async (payload : AccessoryState) => {
         this.log.debug('UpdateAccessoryTargetState Event handled');
         const stuff = payload.value;
-        this.updateCharacteristic(this.targetStateCharacteristic(), stuff);
+        this.updateCharacteristic(this.targetStateCharacteristic(), stuff, 'targetState');
       }).bind(this));
     super.postconfigureAccessory();
+    this.updateCharacteristic(this.targetStateCharacteristic(), this.targetState, 'targetState');
   }
 
 }
