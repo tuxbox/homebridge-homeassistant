@@ -81,7 +81,6 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
       } else if (payload.accessory_type === 'lock' ) {
         const configuration = payload.payload;
         const state_topic = configuration['state_topic'];
-        //const target_state_topic = configuration['target_state_topic'];
         EventEmitter.on(`${MqttEvents.MessageReceived}:${state_topic}`, (async (payload) => {
           if (configuration['sync_state_to_target_state'] === true) {
             EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, JSON.parse(payload.payload));
@@ -92,9 +91,6 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
         EventEmitter.emit(MqttEvents.SubscribeTopic, {
           'topic': state_topic,
         });
-        //EventEmitter.on(`${MqttEvents.MessageReceived}:${target_state_topic}`, (async (payload) => {
-        //  EventEmitter.emit(`${Events.UpdateAccessoryTargetState}:${accessory.UUID}`, JSON.parse(payload.payload));
-        //}));
         EventEmitter.emit(Events.AccessoryConfigured, {
           'accessory_type': 'lock',
           'accessory_id': accessory.UUID,
