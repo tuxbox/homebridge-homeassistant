@@ -41,7 +41,7 @@ export abstract class ActorPlatformAccessory<
   async handleHomekitTargetStateSet(value : CharacteristicValue) : Promise<void> {
     this.log.debug(`handleHomekitTargetStateSet - ${value} - ${typeof value}`);
     this.targetState = value;
-    EventEmitter.emit(Events.PublishAccessoryTargetState, {
+    EventEmitter.emit(`${Events.PublishAccessoryTargetState}:${this.accessory.UUID}`, {
       configuration: this.accessory.context.configuration,
       payload: {
         value,

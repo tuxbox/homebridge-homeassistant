@@ -51,7 +51,7 @@ export class MQTTPlatform {
         EventEmitter.on(MqttEvents.PublishMessage, (async (event : MqttMessage) => {
           this.log.debug('Received MqttPublish Event');
           this.log.debug(JSON.stringify(event));
-          await this.publish(event.topic, event.payload, event.opts);
+          await this.publish(event.topic, event.payload, event.opts || {});
         }).bind(this));
         EventEmitter.on(MqttEvents.UnsubscribeTopic, (async (event: MqttCancelSubscription) => {
           this.log.debug('Received MqttUnsubscribe Event');
@@ -90,6 +90,8 @@ export class MQTTPlatform {
                 eventPayload['accessory_type'] = 'sensor';
               } else if (topic.indexOf('/locks/') > -1) {
                 eventPayload['accessory_type'] = 'lock';
+              } else if( topic.indexOf('/switches/') > -1) {
+                eventPayload['accessory_type'] = 'switch';
               } else {
                 eventPayload['accessory_type'] = 'unknown';
               }

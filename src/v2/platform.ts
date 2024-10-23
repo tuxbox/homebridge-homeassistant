@@ -97,6 +97,57 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
             EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, content);
           }
         }).bind(this));
+        EventEmitter.on(`${Events.PublishAccessoryTargetState}:${accessory.UUID}`, async (payload) => {
+          this.log.debug(`consuming 'PublishAccessoryTargetState' - ${JSON.stringify(payload)}`);
+          const configuration = payload.configuration;
+          const content = payload.payload;
+          content.readable_value = content.value === HAPCharacteristic.LockTargetState.UNSECURED ? 'unsecured' : 'secured';
+          EventEmitter.emit(MqttEvents.PublishMessage, {
+            topic: configuration['target_state_topic'],
+            payload: JSON.stringify(content),
+            opts: {},
+          } as MqttMessage);
+          const auto_lock_delay = configuration['auto_lock_delay'] || 3000;
+          if(payload.payload.value === HAPCharacteristic.LockTargetState.UNSECURED ) {
+            this.log.debug(`Unlocking lock - scheduling auto lock - ${auto_lock_delay}`);
+            setTimeout(() => {
+              this.log.debug('fireing auto lock event');
+              const message = {
+                ...payload,
+              };
+              message.payload.value = HAPCharacteristic.LockTargetState.SECURED;
+              message.payload.readable_value = 'secured';
+              EventEmitter.emit(Events.PublishAccessoryTargetState, message);
+            }, auto_lock_delay);
+          }
+        });
+        this.subscriptions[state_topic] = accessory.UUID;
+        EventEmitter.emit(MqttEvents.SubscribeTopic, {
+          'topic': state_topic,
+        });
+        EventEmitter.emit(Events.AccessoryConfigured, {
+          'accessory_type': 'lock',
+          'accessory_id': accessory.UUID,
+        });
+      } else if( payload.accessory_type === 'switch') {
+        const configuration = payload.payload;
+        const state_topic = configuration['state_topic'];
+        const command_topic = configuration['command_topic'];
+        EventEmitter.on(`${MqttEvents.MessageReceived}:${state_topic}`, (async (payload) => {
+          this.log.debug('switch state');
+          this.log.debug(JSON.stringify(payload));
+          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
+        }).bind(this));
+        EventEmitter.on(`${Events.PublishAccessoryState}:${accessory.UUID}`, (async (payload) => {
+          this.log.debug(`publish switch command to ${command_topic}`);
+          EventEmitter.emit(`${MqttEvents.PublishMessage}`, {
+            topic: command_topic,
+            payload: JSON.stringify(payload.payload),
+            opts: {},
+            qos: 0,
+            retain: false,
+          } as MqttMessage);
+        }).bind(this));
         this.subscriptions[state_topic] = accessory.UUID;
         EventEmitter.emit(MqttEvents.SubscribeTopic, {
           'topic': state_topic,
@@ -109,30 +160,7 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
         this.log.debug(`unsupported accessory_type: ${payload.accessory_type}`);
       }
     });
-    EventEmitter.on(Events.PublishAccessoryTargetState, async (payload) => {
-      this.log.debug(`consuming 'PublishAccessoryTargetState' - ${JSON.stringify(payload)}`);
-      const configuration = payload.configuration;
-      const content = payload.payload;
-      content.readable_value = content.value === HAPCharacteristic.LockTargetState.UNSECURED ? 'unsecured' : 'secured';
-      EventEmitter.emit(MqttEvents.PublishMessage, {
-        topic: configuration['target_state_topic'],
-        payload: JSON.stringify(content),
-        opts: {},
-      } as MqttMessage);
-      const auto_lock_delay = configuration['auto_lock_delay'] || 3000;
-      if(payload.payload.value === HAPCharacteristic.LockTargetState.UNSECURED ) {
-        this.log.debug(`Unlocking lock - scheduling auto lock - ${auto_lock_delay}`);
-        setTimeout(() => {
-          this.log.debug('fireing auto lock event');
-          const message = {
-            ...payload,
-          };
-          message.payload.value = HAPCharacteristic.LockTargetState.SECURED;
-          message.payload.readable_value = 'secured';
-          EventEmitter.emit(Events.PublishAccessoryTargetState, message);
-        }, auto_lock_delay);
-      }
-    });
+
     //ITotalEnergy = TotalEnergyCharacteristic;
     //ICurrentPower = PowerCharacteristic;
     //let x = Object.defineProperty(this.api.hap.Characteristic, 'TotalEnergy', {value: TotalEnergyCharacteristic});

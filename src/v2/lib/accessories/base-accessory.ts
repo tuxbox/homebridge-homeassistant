@@ -104,10 +104,13 @@ export abstract class BasePlatformAccessory<
 
   protected updateCharacteristic(characteristic: WithUUID<new () => HAPCharacteristic>, value: CharacteristicValue, propertyName = 'currentState') {
     if (value === undefined || !(typeof value === this.stateValueType())) {
-      this.log.warn(`Illegal value for Temperature Sensor received (${value}) - ${this.configuration.name}`);
+      this.log.warn(`Illegal value for xxxx received (${value}) - ${this.configuration.name}`);
     } else {
       this.log.info(`Updating Characteristic value for ${this.configuration.name} to ${value} (${typeof value})`);
       this.service.updateCharacteristic(characteristic, value);
+      if (this.accessory.context.__persisted_state === undefined) {
+        this.accessory.context.__persisted_state = new Map<string, CharacteristicValue>();
+      }
       this.accessory.context.__persisted_state[this.stateCharacteristic().UUID] = value;
       this[propertyName] = value;
       this.api.updatePlatformAccessories([this.accessory]);
@@ -115,7 +118,7 @@ export abstract class BasePlatformAccessory<
   }
 
   async handleHomekitCurrentStateGet() : Promise<CharacteristicValue> {
-    return this.currentState!;
+    return this.currentState;
   }
 
 }

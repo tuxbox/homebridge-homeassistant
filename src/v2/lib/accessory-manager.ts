@@ -38,11 +38,12 @@ export class AccessoryManager {
           this.log.info('using existing accessory');
         }
         if( usedAccessory ) {
-          EventEmitter.emit(Events.ConfigureAccessory, {
+          const configurationPayload = {
             accessory_type: payload.accessory_type,
             accessory: usedAccessory,
             payload: payload.payload,
-          });
+          };
+          EventEmitter.emit(Events.ConfigureAccessory, configurationPayload);
         } else {
           this.log.info(`häää? ${usedAccessory}`);
         }

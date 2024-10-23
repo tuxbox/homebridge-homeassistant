@@ -7,6 +7,7 @@ import { TemperatureSensorPlatformAccessory } from './accessories/sensors/temper
 import { HumiditySensorPlatformAccessory } from './accessories/sensors/humidity-sensor';
 import { BasePlatformAccessory } from './accessories/base-accessory';
 import { LockPlatformAccessory } from './accessories/locks/lock-accessory';
+import { SwitchAccessory } from './accessories/switch/switch-accessory';
 
 export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
 
@@ -34,15 +35,28 @@ export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
           this.logger.debug(`Unknown sensor type '${payload.payload.type}'`);
         }
       } else if( payload.accessory_type === 'lock' ) {
-        this.logger.warn('\'lock\' accessory type setting up');
+        this.logger.info('\'lock\' accessory type setting up');
         const accessory = payload.accessory as PlatformAccessory<ActorContext<AccessoryConfiguration>>;
         instance = new LockPlatformAccessory(this.platform, this.api, accessory, this.logger);
+      } else if( payload.accessory_type === 'switch' ) {
+        this.logger.info('\'switch\' accessory type setting up');
+        const accessory = payload.accessory as PlatformAccessory<ActorContext<AccessoryConfiguration>>;
+        try {
+          this.logger.debug(payload.accessory_type);
+          this.logger.debug(JSON.stringify(payload.payload));
+          this.logger.debug(JSON.stringify(accessory.UUID));
+          instance = new SwitchAccessory(this.platform, this.api, accessory, this.logger);
+        } catch (e) {
+          this.logger.error('ERRÖR');
+          this.logger.error(JSON.stringify(e));
+        }
       } else {
         this.logger.warn(`accessory type ('${payload.accessory_type}') not yet implemented`);
       }
       try {
         instance?.configureAccessory();
       } catch(e) {
+        this.logger.error('eRrOr');
         this.logger.error(`Configuration error! ${e}`);
       }
     }).bind(this));
