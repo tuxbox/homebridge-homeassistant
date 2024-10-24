@@ -4,8 +4,6 @@ import { AccessoryConfiguration } from '../../accessory-configuration';
 import { ActorContext } from '../../accessory-context';
 import { ActorPlatformAccessory } from '../base-actor-accessory';
 
-export const UPDATE_TEMPERATURE_SENSOR = 'accessory:update:temperature';
-
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
