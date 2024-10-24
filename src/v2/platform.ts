@@ -156,6 +156,32 @@ export class HomebridgeMqttPlatform extends AccessoryManagerPlatform {
           'accessory_type': 'lock',
           'accessory_id': accessory.UUID,
         });
+      } else if(payload.accessory_type === 'light') {
+        const configuration = payload.payload;
+        const state_topic = configuration['state_topic'];
+        const command_topic = configuration['command_topic'];
+        EventEmitter.on(`${MqttEvents.MessageReceived}:${state_topic}`, (async (payload) => {
+          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}`, JSON.parse(payload.payload));
+          EventEmitter.emit(`${Events.UpdateAccessoryState}:${accessory.UUID}:brightness`, JSON.parse(payload.payload));
+        }).bind(this));
+        EventEmitter.on(`${Events.PublishAccessoryState}:${accessory.UUID}`, (async (payload) => {
+          this.log.debug(`publish switch command to ${command_topic}`);
+          EventEmitter.emit(`${MqttEvents.PublishMessage}`, {
+            topic: command_topic,
+            payload: JSON.stringify(payload.payload),
+            opts: {},
+            qos: 0,
+            retain: false,
+          } as MqttMessage);
+        }).bind(this));
+        this.subscriptions[state_topic] = accessory.UUID;
+        EventEmitter.emit(MqttEvents.SubscribeTopic, {
+          'topic': state_topic,
+        });
+        EventEmitter.emit(Events.AccessoryConfigured, {
+          'accessory_type': 'light',
+          'accessory_id': accessory.UUID,
+        });
       } else {
         this.log.debug(`unsupported accessory_type: ${payload.accessory_type}`);
       }

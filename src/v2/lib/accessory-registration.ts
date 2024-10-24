@@ -8,6 +8,7 @@ import { HumiditySensorPlatformAccessory } from './accessories/sensors/humidity-
 import { BasePlatformAccessory } from './accessories/base-accessory';
 import { LockPlatformAccessory } from './accessories/locks/lock-accessory';
 import { SwitchAccessory } from './accessories/switch/switch-accessory';
+import { LightAccessory } from './accessories/light/light-accessory';
 
 export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
 
@@ -48,6 +49,14 @@ export class AccessoryRegistration<Platform extends DynamicPlatformPlugin> {
           instance = new SwitchAccessory(this.platform, this.api, accessory, this.logger);
         } catch (e) {
           this.logger.error('ERRÖR');
+          this.logger.error(JSON.stringify(e));
+        }
+      } else if( payload.accessory_type === 'light' ) {
+        const accessory = payload.accessory as PlatformAccessory<AccessoryContext<AccessoryConfiguration>>;
+        try {
+          instance = new LightAccessory(this.platform, this.api, accessory, this.logger);
+        } catch (e) {
+          this.logger.error('error');
           this.logger.error(JSON.stringify(e));
         }
       } else {

@@ -92,6 +92,8 @@ export class MQTTPlatform {
                 eventPayload['accessory_type'] = 'lock';
               } else if( topic.indexOf('/switches/') > -1) {
                 eventPayload['accessory_type'] = 'switch';
+              } else if( topic.indexOf('/lights/') > -1) {
+                eventPayload['accessory_type'] = 'light';
               } else {
                 eventPayload['accessory_type'] = 'unknown';
               }
